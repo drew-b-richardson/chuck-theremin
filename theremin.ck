@@ -6,33 +6,41 @@ Echo e3;
 750::ms => e1.delay => e2.delay => e3.delay;
 .50 => e1.mix => e2.mix => e3.mix;
 
-//pad parameters
-Flute pad1;
-pad1 =>dac;
-0.5 => pad1.gain;
-
-//main instrument
-TubeBell instr;
-JCRev r;
-BPF f;
-Gain g;
-instr =>r => e3 => f => g => dac;
-0.5 => instr.gain;
-0.7 => g.gain;
-
 //sampling
 LiSa lisa;
-1::second => lisa.duration;
+5::second => lisa.duration;
 false => int isRecording;
+time startRecTime;
+time endRecTime;
+dur recDur;
+
 
 //filter settings
+BPF f;
 1 => f.Q;
 1000 => f.freq;
 
+//have all sources input into single Gain to control volume
+1 => int numShreds;
+Gain g => dac;
+
+//pad parameters
+Flute pad1 => g;
+0 => int padId;
+
+//main instrument
+Clarinet instr =>  g;
+JCRev r;
+
+//set up sound
+/*instr =>r => e3 => f => g => dac;*/
+/*0.5 => instr.gain;*/
+/*0.7 => g.gain;*/
+
 220.0 => instr.freq;
-1 => instr.gain;
-.8 => r.gain;
-.2 => r.mix;
+/*1 => instr.gain;*/
+/*.8 => r.gain;*/
+/*.2 => r.mix;*/
 
 SerialIO cereal;
 cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
@@ -47,48 +55,21 @@ cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 
 "" => string cmd;
 
-
-
-fun void play(StkInstrument pad, float vol, int i )
+fun void play(LiSa playback, dur recDur)
 {
-  //0 => pad1.gain;
-  notes[i] => pad1.freq;
-  0.2 => pad1.noteOn;
-
-
-}
- fun void test()
-    {
-      <<< "new shred" >>>;
-      SinOsc pad => dac;
-      .5 => pad1.gain;
-      while(true)
-      {
-      500 => pad1.freq;
-      1::second => now;
-      }
-
-      <<< "end shred" >>>;
-    }
-
-
-fun void play(LiSa playback)
-{
-
-  //1::second => playback.duration;
-  while(true)
-  {
-    1 => playback.play;
-
-    5::second => now;
-
-    0 => playback.play;
-  }
+  0::ms => playback.playPos;
+  1 => playback.loop;
+  recDur => playback.loopEnd;
+  1 => playback.play;
 }
 
 
 while(true)
 {
+
+  1.0/numShreds => g.gain; 
+  <<< "numShreds = " + numShreds >>>;
+
 
   cereal.onLine() => now;
   cereal.getLine() => string line;
@@ -111,25 +92,30 @@ while(true)
       else
       {
         (0.0 + value)/100 => volume;
+        <<< volume >>>;
         volume => instr.gain;
       }
     }
 
 
-    //play drum
+    //play pad in separate shred so will still sound when restarting main
     else if(cmd == "k")
     {
-      <<< "knock" >>>;
-      notes[2]*2 =>	frequency;
-      0.5 => instr.noteOn;
+      if(padId == 0)
+      {
+        numShreds++;
+        Machine.add( "/docs/chuck/theremin/pads.ck" ) => padId;
+      }
+      else{
+        Machine.replace(padId, "/docs/chuck/theremin/pads.ck");
+      }
     }
 
     //play note
     else if(cmd == "z")
     {
-
-      notes[value]*2 =>	frequency;
-      0.8 => instr.noteOn;
+      notes[value] =>	frequency;
+      1 => instr.noteOn;
     }
 
     //play pad
@@ -139,31 +125,20 @@ while(true)
       {
         <<< "start recording" >>>;
         true => isRecording;
-        instr => r => lisa => g =>  dac;
+        instr => lisa => g;
+        now => startRecTime;
         1 => lisa.record;
-
-        //hang out 
-        /*1::second => now;*/
-        /*0 => lisa.record;*/
-        /*spork ~ play(lisa);*/
-        /*500::ms => now;*/
-        /*600 => sin.freq;*/
-        /*500::ms => now;*/
       }
       else
       {
         <<< "stop recording" >>>;
         false => isRecording;
-        instr =>r  => f => g=> dac;
-        0.5 => g.gain;
-
-        //stop recording 
         0 => lisa.record;
-        spork ~ play(lisa);
+        now => endRecTime;
+        endRecTime - startRecTime => recDur;
+        numShreds++;
+        spork ~ play(lisa, recDur);
       }
-//Machine.add( "/docs/chuck/pads.ck" ) => int id;
-
-     // play(pad, volume, value);
     }
     //vibrato - amount is percentage of original freq
     else if(cmd == "s")
