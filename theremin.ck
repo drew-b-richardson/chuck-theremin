@@ -32,28 +32,18 @@ Flute pad1 => g;
 Clarinet instr =>  g;
 JCRev r;
 
-//set up sound
-/*instr =>r => e3 => f => g => dac;*/
-/*0.5 => instr.gain;*/
-/*0.7 => g.gain;*/
-
-220.0 => instr.freq;
-/*1 => instr.gain;*/
-/*.8 => r.gain;*/
-/*.2 => r.mix;*/
-
 SerialIO cereal;
 cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 
 0 => int value;
-500 => float frequency;
+0 => float frequency;
 0.0 => float percentage;
 0.0 => float offset;
 .4 => float volume;
 1000 => float freq;
 [10, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ] @=> int notes[];
-
 "" => string cmd;
+notes[2] => instr.freq;
 
 fun void play(LiSa playback, dur recDur)
 {
@@ -63,13 +53,14 @@ fun void play(LiSa playback, dur recDur)
   1 => playback.play;
 }
 
-
 while(true)
 {
 
   1.0/numShreds => g.gain; 
   <<< "numShreds = " + numShreds >>>;
 
+  //use this to create an always on sound even during restarts.  must be before the cereal.online => now
+  /*1 => instr.noteOn;*/
 
   cereal.onLine() => now;
   cereal.getLine() => string line;
@@ -160,4 +151,5 @@ while(true)
     frequency => instr.freq;
 
   }
+
 }
