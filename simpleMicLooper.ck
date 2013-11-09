@@ -1,4 +1,5 @@
 adc => LiSa lisa => dac;
+<<< "enter looper" >>>;
 
 Std.atoi(me.arg(0)) => int numBeats;
 Std.atof(me.arg(1)) => float tempo;

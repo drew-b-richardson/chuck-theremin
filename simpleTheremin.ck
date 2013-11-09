@@ -1,13 +1,3 @@
-public  class Constants
-{
-  [0,2,4,5,7,9,11,12,14,16,17,19] @=> static int IONIAN[];
-  [0,2,3,5,7,9,10,12,14,15,17,19] @=> static int DORIAN[];
-
-  0 => static int C;
-  2 => static int D;
-}
-
-
 
 //echo parameters
 Echo e1;
@@ -23,28 +13,27 @@ BPF f;
 1000 => f.freq;
 
 //main instrument
-Wurley instr =>  Pan2 p =>  JCRev r => Gain g => dac;
+Flute instr =>  Pan2 p =>  JCRev r => Gain g => dac;
 
-//call LiSa
-1 => int playFromMeasure;
-0 => int isCocked;
-0 => int counter;
-0 => int measure;
-200 => int lag;
-250 => int tempo; //should this and beats be passed to drumMachine?
+//SONG SETTINGS PASSED TO DRUM MACHINE AND LOOPER
+250 => int tempo; 
 16 => int numBeats;
-numBeats * tempo::ms => dur measureTime;
-now => time startTime;
-
-SerialIO cereal;
-cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
-
 Constants constants;
 constants.D =>   int key;
 constants.DORIAN   @=> int scale[];
 5 => int octave;
 octave * 12 + key => int transpose;
 
+//vars to make LiSa start at beginning of next measure
+//NOTE:  ONCE THIS SHRED IS REMOVED, MEASURES ARE NO LONGER ACCURATE.  STARTTIME IS FROM START OF VM, NOT SHRED
+1 => int playFromMeasure;
+200 => int lag;
+numBeats * tempo::ms => dur measureTime;
+time startTime;
+
+//SERIAL INPUT FROM ARDUINO
+SerialIO cereal;
+cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 
 0 => int value;
 100 => float frequency;
@@ -56,7 +45,6 @@ octave * 12 + key => int transpose;
 "" => string cmd;
 scale[2] => instr.freq;
 
-Machine.add( "drumMachine.ck:" + tempo + ":" + numBeats);
 
 while(true)
 {
@@ -68,6 +56,18 @@ while(true)
 
     line.substring(0,1) => cmd;
     Std.atoi(line.substring(1)) => value;
+
+    //play looper in separate shred so will still sound when restarting main
+    if(cmd == "k")
+    {
+      <<< "looper ready" >>>;
+      now => time currentTime;
+      currentTime - startTime => dur duration;
+      currentTime/measureTime => float curMeasure;
+      Math.floor(curMeasure ) * measureTime => dur tillNextMeasure;
+      tillNextMeasure - duration => now;
+      Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag );
+    }
 
     //volume - always get one of these before any note
     //NOTE - CREATES CLIPPING ON CHANGE OF VOLUME
@@ -88,29 +88,7 @@ while(true)
     }
 
 
-    //play pad in separate shred so will still sound when restarting main
-    else if(cmd == "k")
-    {
-      now => time currentTime;
-      currentTime - startTime => dur duration;
-      currentTime/measureTime => float curMeasure;
-      <<< "curMeasure", curMeasure >>>;
-      Math.floor(curMeasure + 1) * measureTime => dur tillNextMeasure;
-      tillNextMeasure - duration => now;
 
-      Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag );
-
-      
-
-      /*if(shredId == 0)*/
-      /*{*/
-      /*numShreds++;*/
-      /*Machine.add( "/docs/chuck/theremin/test.ck" ) => shredId;*/
-      /*}*/
-      /*else{*/
-      /*Machine.replace(shredId, "/docs/chuck/theremin/test.ck");*/
-      /*}*/
-    }
 
     //play note
     else if(cmd == "z")
@@ -118,6 +96,14 @@ while(true)
       /*<<< value, scale[value], transpose >>>;*/
       Std.mtof(scale[value] + transpose) =>	frequency;
       0.3 => instr.noteOn;
+    }
+
+    //start drum machine
+    else if(cmd == "c")
+    {
+now => startTime;
+
+      Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo);
     }
 
     //vibrato - amount is percentage of original freq
