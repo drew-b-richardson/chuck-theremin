@@ -1,3 +1,11 @@
+Constants constants;
+constants.D =>   int key;
+constants.DORIAN    @=> int scale[];
+4 => int octave;
+octave * 12 + key => int transpose;
+<<< transpose >>>;
+
+
 Gain g => dac;
 SndBuf kick => g;
 me.dir() + "audio/kick_05.wav" =>  kick.read;
@@ -21,7 +29,6 @@ me.dir() + "audio/hihat_03.wav" =>  reverse.read;
 SndBuf hihat => g;
 [me.dir() + "audio/hihat_01.wav",me.dir() + "audio/hihat_02.wav",me.dir() + "audio/hihat_03.wav",me.dir() + "audio/hihat_04.wav"]   @=>  string hihatFiles[];
 
-[50, 52, 53, 55, 57, 59, 60, 62] @=> int notes[];
 SinOsc o => g;
 1 => o.gain;
 
@@ -32,7 +39,7 @@ SinOsc o => g;
 /*me.dir() + "audio/hihat_01.wav" =>  hihat.read;*/
 /*hihat.samples() => hihat.pos; */
 
-[1, 0, 0, 0, 0, 0, 1, 0,1, 0, 1, 0, 1, 0, 1, 0 ] @=> int melody[];
+[1, 0, 0, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1 ] @=> int melody[];
 [1, 0, 0, 0, 1, 0, 0, 0,1, 0, 1, 0, 1, 0, 1, 0 ] @=> int kicks[];
 [0, 0, 1, 0, 0, 0, 1, 0,0, 0, 1, 0, 0, 0, 1, 0 ] @=> int snares[];
 [0, 0, 0, 0, 0, 0, 0, 1,1, 0, 1, 0, 1, 0, 1, 0 ] @=> int fxs[];
@@ -42,24 +49,28 @@ SinOsc o => g;
 0 => int measure;
 0 => float melodyFreq;
 200 => int lag;
+/*[50, 52, 53, 55, 57, 59, 60, 62]  @=> int scale [];*/
 
 .25 => float tempo;
 while(true)
 {
 
   counter % melody.cap() => int beat;  //8 beats per measure
-  <<< measure, beat >>>;
+  /*<<< measure, beat >>>;*/
+  
 
 
   //if first beat, mark new measure, play root in melody, play louder hihat
   if(beat == 0)
   {
-    Std.mtof(notes[0]) => melodyFreq;
+    <<<scale[0] + transpose  >>>;
+    
+    Std.mtof(scale[0] + transpose) => melodyFreq;
     .6 => hihat.gain;
   }
   else
   {
-    Std.mtof(notes[Math.random2(0, notes.cap() -1)]) => melodyFreq;
+    Std.mtof(scale[Math.random2(0, scale.cap() -1)] + transpose) => melodyFreq;
     .2 => hihat.gain;
   }
 
@@ -101,7 +112,6 @@ while(true)
   counter++;
   if(measure == 0 && beat==15)
   {
-    <<< "here" >>>;
     lag::ms => now;
     Machine.add( "simpleMicLooper.ck:" + melody.cap() + ":" + tempo );
     tempo::second- lag::ms => now; 

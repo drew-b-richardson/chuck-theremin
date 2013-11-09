@@ -1,3 +1,16 @@
+public  class Constants
+{
+  [0,2,4,5,7,9,11,12] @=> static int IONIAN[];
+  [0,2,3,5,7,9,10,12] @=> static int DORIAN[];
+
+  0 => static int C;
+  2 => static int D;
+
+  /*X x;*/
+  /*2 => x.our_data;*/
+}
+
+
 //echo parameters
 Echo e1;
 Echo e2;
@@ -17,11 +30,11 @@ Wurley instr =>  Pan2 p =>  JCRev r => Gain g => dac;
 SerialIO cereal;
 cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 
-[0,2,4,5,7,9,11,12] @=>  int IONIAN[];
-[0,2,3,5,7,9,10,12,14,15,17,19,21,23,24] @=>  int DORIAN[];
-
-0 =>  int C;
-2 =>  int D;
+Constants constants;
+constants.D =>   int key;
+constants.DORIAN   @=> int scale[];
+5 => int octave;
+octave * 12 + key => int transpose;
 
 
 0 => int value;
@@ -31,14 +44,10 @@ cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 .4 => float volume;
 1000 => float freq;
 
-D =>   int key;
-DORIAN   @=> int scale[];
-5 => int octave;
-octave * 12 + key => int transpose;
 "" => string cmd;
 scale[2] => instr.freq;
 
-Machine.add( "week3-sample.ck");
+Machine.add( "drumMachine.ck");
 
 while(true)
 {
