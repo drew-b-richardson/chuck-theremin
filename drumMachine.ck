@@ -3,7 +3,7 @@ constants.D =>   int key;
 constants.DORIAN    @=> int scale[];
 4 => int octave;
 octave * 12 + key => int transpose;
-<<< transpose >>>;
+/*<<< transpose >>>;*/
 
 
 Gain g => dac;
@@ -63,7 +63,7 @@ while(true)
   //if first beat, mark new measure, play root in melody, play louder hihat
   if(beat == 0)
   {
-    <<<scale[0] + transpose  >>>;
+    /*<<<scale[0] + transpose  >>>;*/
     
     Std.mtof(scale[0] + transpose) => melodyFreq;
     .6 => hihat.gain;
@@ -74,11 +74,10 @@ while(true)
     .2 => hihat.gain;
   }
 
-  if((measure == 1 || measure == 2 || measure == 3)&& beat==0)
-  {
-    Machine.add( "simpleMicLooper.ck:" + melody.cap() + ":" + tempo + ":" + lag );
-  }
-
+  /*if((measure == 1 || measure == 2 || measure == 3)&& beat==0)*/
+  /*{*/
+    /*Machine.add( "simpleMicLooper.ck:" + melody.cap() + ":" + tempo + ":" + lag );*/
+  /*}*/
 
   //play random hihat sound every beat.  Louder if first beat
   Math.random2(0, hihatFiles.cap() - 1) => int whichHiHat ;
@@ -110,18 +109,20 @@ while(true)
   }
 
   counter++;
-  if(measure == 0 && beat==15)
-  {
-    lag::ms => now;
-    Machine.add( "simpleMicLooper.ck:" + melody.cap() + ":" + tempo );
-    tempo::second- lag::ms => now; 
-  }
-  else
-  {
-    tempo::second => now; 
-  }
+  /*if(measure == 0 && beat==15)*/
+  /*{*/
+    /*lag::ms => now;*/
+    /*Machine.add( "simpleMicLooper.ck:" + melody.cap() + ":" + tempo );*/
+    /*tempo::second- lag::ms => now; */
+  /*}*/
+  /*else*/
+  /*{*/
+    /*tempo::second => now; */
+  /*}*/
   if(beat == melody.cap() -1)
     measure++;
+  
+    tempo::second => now; 
 
 }
 
