@@ -1,9 +1,12 @@
 Std.atoi(me.arg(0)) => int numBeats;
 Std.atoi(me.arg(1)) => int tempo;
 
-Constants constants;
-constants.D =>   int key;
-constants.DORIAN    @=> int scale[];
+/*Constants constants;*/
+/*constants.D =>   int key;*/
+/*constants.DORIAN   @=> int scale[];*/
+2 => int key;
+[0,2,3,5,7,9,10,12,14,15,17,19,21,23,24] @=> int scale[];
+
 4 => int octave;
 octave * 12 + key => int transpose;
 

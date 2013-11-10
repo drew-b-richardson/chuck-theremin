@@ -18,9 +18,11 @@ Flute instr =>  Pan2 p =>  JCRev r => Gain g => dac;
 //SONG SETTINGS PASSED TO DRUM MACHINE AND LOOPER
 250 => int tempo; 
 16 => int numBeats;
-Constants constants;
-constants.D =>   int key;
-constants.DORIAN   @=> int scale[];
+/*Constants constants;*/
+/*constants.D =>   int key;*/
+/*constants.DORIAN   @=> int scale[];*/
+2 => int key;
+[0,2,3,5,7,9,10,12,14,15,17,19,21,23,24] @=> int scale[];
 5 => int octave;
 octave * 12 + key => int transpose;
 
@@ -28,8 +30,8 @@ octave * 12 + key => int transpose;
 //NOTE:  ONCE THIS SHRED IS REMOVED, MEASURES ARE NO LONGER ACCURATE.  STARTTIME IS FROM START OF VM, NOT SHRED
 1 => int playFromMeasure;
 200 => int lag;
-numBeats * tempo::ms => dur measureTime;
-time startTime;
+numBeats * tempo::ms => dur durPerMeasure;
+time timeStartDrum;
 
 //SERIAL INPUT FROM ARDUINO
 SerialIO cereal;
@@ -45,7 +47,6 @@ cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 "" => string cmd;
 scale[2] => instr.freq;
 
-
 while(true)
 {
 
@@ -53,7 +54,6 @@ while(true)
   cereal.getLine() => string line;
   if(line$Object != null)
   {
-
     line.substring(0,1) => cmd;
     Std.atoi(line.substring(1)) => value;
 
@@ -61,11 +61,11 @@ while(true)
     if(cmd == "k")
     {
       <<< "looper ready" >>>;
-      now => time currentTime;
-      currentTime - startTime => dur duration;
-      currentTime/measureTime => float curMeasure;
-      Math.floor(curMeasure ) * measureTime => dur tillNextMeasure;
-      tillNextMeasure - duration => now;
+      now => time timeStartLoop;
+      timeStartLoop - timeStartDrum => dur durSinceDrums;
+      timeStartLoop/durPerMeasure => float curMeasure;
+      Math.floor(curMeasure ) * durPerMeasure => dur tillNextMeasure;
+      tillNextMeasure - durSinceDrums => now;
       Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag );
     }
 
@@ -87,9 +87,6 @@ while(true)
       }
     }
 
-
-
-
     //play note
     else if(cmd == "z")
     {
@@ -101,8 +98,7 @@ while(true)
     //start drum machine
     else if(cmd == "c")
     {
-now => startTime;
-
+      now => timeStartDrum;
       Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo);
     }
 
@@ -111,7 +107,6 @@ now => startTime;
     {
       (0.0 + value)/10000*2 => percentage;
       frequency*percentage => offset;
-
       frequency+offset => frequency;
     }
 
@@ -123,8 +118,6 @@ now => startTime;
     }
 
     frequency => instr.freq;
-
   }
-
 }
 

@@ -7,6 +7,5 @@ public  class Constants
   2 => static int D;
 }
 
-Machine.add( "simpleTheremin.ck");
 
 

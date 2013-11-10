@@ -1,0 +1,4 @@
+1. start server (F3)
+2. shred Constants so that all files will have access to it
+3. shred simpleTheremin.  this calls all others excepte 'repeats'
+
