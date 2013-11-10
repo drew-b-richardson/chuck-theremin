@@ -1,16 +1,24 @@
 Std.atoi(me.arg(0)) => int numBeats;
 Std.atoi(me.arg(1)) => int tempo;
+Std.atof(me.arg(2)) => float pan;
 
+Gain g => Pan2 p => dac;
+TriOsc o => g;
+pan => p.pan;
+1 => o.gain;
+4 => int numSounds;
+1.0/numSounds => g.gain;
+0 => int playRandomMelody;
+0 => int currentMelody;
 Constants constants;
 constants.D =>   int key;
-constants.DORIAN   @=> int scale[];
+constants.MINPENT   @=> int scale[];
 /*2 => int key;*/
 /*[0,2,3,5,7,9,10,12,14,15,17,19,21,22,24] @=> int scale[];*/
+5 => int octave;
 
-4 => int octave;
 octave * 12 + key => int transpose;
 
-Gain g => dac;
 SndBuf kick => g;
 me.dir() + "audio/kick_05.wav" =>  kick.read;
 kick.samples() => kick.pos; 
@@ -32,13 +40,6 @@ me.dir() + "audio/hihat_03.wav" =>  reverse.read;
 SndBuf hihat => g;
 [me.dir() + "audio/hihat_01.wav",me.dir() + "audio/hihat_02.wav",me.dir() + "audio/hihat_03.wav",me.dir() + "audio/hihat_04.wav"]   @=>  string hihatFiles[];
 
-SinOsc o => g;
-1 => o.gain;
-4 => int numSounds;
-1.0/numSounds => g.gain;
-
-1 => int playRandomMelody;
-0 => int currentMelody;
 
 [0, 0, 0, 1, 2, 3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13] @=> int melodyNotes[];
 [1, 0, 0, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1 ] @=> int melody[];

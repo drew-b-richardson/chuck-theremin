@@ -15,14 +15,14 @@ BPF f;
 //main instrument
 Flute instr =>  Pan2 p =>  JCRev r => Gain g => dac;
 
-0.5 => float instrGain;
+0.3 => float instrGain;
 
 //SONG SETTINGS PASSED TO DRUM MACHINE AND LOOPER
 250 => int tempo; 
 16 => int numBeats;
 Constants constants;
 constants.D =>   int key;
-constants.DORIAN   @=> int scale[];
+constants.MINPENT @=> int scale[];
 /*2 => int key;*/
 /*[0,2,3,5,7,9,10,12,14,15,17,19,21,23,24] @=> int scale[];*/
 5 => int octave;
@@ -45,6 +45,8 @@ cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 0.0 => float offset;
 .4 => float volume;
 1000 => float freq;
+0.0 => float pan;
+
 
 -1 => int drumMachineId;
 
@@ -77,12 +79,20 @@ while(true)
     {
       <<< "looper ready" >>>;
       waitTillNextMeasure();
-      Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag );
+      Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag + ":" + pan );
     }
+
+   //play looper in separate shred so will still sound when restarting main
+    else if(cmd == "p")
+    {
+      <<< "pan",  value >>>;
+      value/10.0 => pan;
+    }
+
 
     //volume - always get one of these before any note
     //NOTE - CREATES CLIPPING ON CHANGE OF VOLUME
-    if (cmd == "y")
+    else if (cmd == "y")
     {
       //if under sound threshold, turn off previous note for silence
       if(value < 30)
@@ -113,7 +123,7 @@ while(true)
       
       if(drumMachineId == -1)
       {
-        Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo) => drumMachineId;
+        Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo + ":" +  pan) => drumMachineId;
         now => timeStartDrum;
       }
       else
@@ -121,7 +131,7 @@ while(true)
         <<< "else" >>>;
 
         waitTillNextMeasure();
-        Machine.replace( drumMachineId, "drumMachine.ck:" + numBeats + ":" + tempo ) => drumMachineId;
+        Machine.replace( drumMachineId, "drumMachine.ck:" + numBeats + ":" + tempo + ":" + pan ) => drumMachineId;
         now => timeStartDrum;
       }
     }
