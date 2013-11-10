@@ -24,7 +24,6 @@ me.dir() + "audio/stereo_fx_03.wav" =>  fx.read;
 fx.samples() => fx.pos; 
 0.3 => fx.gain;
 
-
 SndBuf reverse => g;
 me.dir() + "audio/hihat_03.wav" =>  reverse.read;
 0 => reverse.pos; 
@@ -35,13 +34,8 @@ SndBuf hihat => g;
 
 SinOsc o => g;
 1 => o.gain;
-
 4 => int numSounds;
-
 1.0/numSounds => g.gain;
-
-/*me.dir() + "audio/hihat_01.wav" =>  hihat.read;*/
-/*hihat.samples() => hihat.pos; */
 
 [1, 0, 0, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1 ] @=> int melody[];
 [1, 0, 0, 0, 1, 0, 0, 0,1, 0, 1, 0, 1, 0, 1, 0 ] @=> int kicks[];
@@ -63,8 +57,6 @@ while(true)
   //if first beat, mark new measure, play root in melody, play louder hihat
   if(beat == 0)
   {
-    /*<<<scale[0] + transpose  >>>;*/
-
     Std.mtof(scale[0] + transpose) => melodyFreq;
     .6 => hihat.gain;
   }

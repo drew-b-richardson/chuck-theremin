@@ -74,7 +74,7 @@ while(true)
     if (cmd == "y")
     {
       //if under sound threshold, turn off previous note for silence
-      if(value < 20)
+      if(value < 30)
       {
         0 => instr.gain;
       }
