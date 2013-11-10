@@ -44,8 +44,21 @@ cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 .4 => float volume;
 1000 => float freq;
 
+-1 => int drumMachineId;
+
 "" => string cmd;
 scale[2] => instr.freq;
+
+fun void waitTillNextMeasure()
+{
+      now - timeStartDrum => dur durSinceDrums;
+      durSinceDrums/durPerMeasure => float curMeasure; //current measure after start of drums as float
+      <<< "current", curMeasure >>>;
+      
+      Math.ceil(curMeasure) - curMeasure => float measureLeft;  //fraction of a measure until next measure starts
+      measureLeft * durPerMeasure => dur tillNextMeasure;//time until next measure starts
+      tillNextMeasure => now; //wait until start of next measure and start looper
+}
 
 while(true)
 {
@@ -61,11 +74,7 @@ while(true)
     if(cmd == "k")
     {
       <<< "looper ready" >>>;
-      now - timeStartDrum => dur durSinceDrums;
-      durSinceDrums/durPerMeasure => float curMeasure; //current measure after start of drums as float
-      Math.ceil(curMeasure) - curMeasure => float measureLeft;  //fraction of a measure until next measure starts
-      measureLeft * durPerMeasure => dur tillNextMeasure;//time until next measure starts
-      tillNextMeasure => now; //wait until start of next measure and start looper
+      waitTillNextMeasure();
       Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag );
     }
 
@@ -98,8 +107,21 @@ while(true)
     //start drum machine
     else if(cmd == "c")
     {
-      now => timeStartDrum;
-      Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo);
+      <<< drumMachineId, "id" >>>;
+      
+      if(drumMachineId == -1)
+      {
+        Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo) => drumMachineId;
+        now => timeStartDrum;
+      }
+      else
+      {
+        <<< "else" >>>;
+
+        waitTillNextMeasure();
+        Machine.replace( drumMachineId, "drumMachine.ck:" + numBeats + ":" + tempo ) => drumMachineId;
+        now => timeStartDrum;
+      }
     }
 
     //vibrato - amount is percentage of original freq
