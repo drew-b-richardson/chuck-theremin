@@ -15,14 +15,16 @@ BPF f;
 //main instrument
 Flute instr =>  Pan2 p =>  JCRev r => Gain g => dac;
 
+0.5 => float instrGain;
+
 //SONG SETTINGS PASSED TO DRUM MACHINE AND LOOPER
 250 => int tempo; 
 16 => int numBeats;
-/*Constants constants;*/
-/*constants.D =>   int key;*/
-/*constants.DORIAN   @=> int scale[];*/
-2 => int key;
-[0,2,3,5,7,9,10,12,14,15,17,19,21,23,24] @=> int scale[];
+Constants constants;
+constants.D =>   int key;
+constants.DORIAN   @=> int scale[];
+/*2 => int key;*/
+/*[0,2,3,5,7,9,10,12,14,15,17,19,21,23,24] @=> int scale[];*/
 5 => int octave;
 octave * 12 + key => int transpose;
 
@@ -101,7 +103,7 @@ while(true)
     {
       /*<<< value, scale[value], transpose >>>;*/
       Std.mtof(scale[value] + transpose) =>	frequency;
-      0.3 => instr.noteOn;
+      instrGain => instr.noteOn;
     }
 
     //start drum machine
