@@ -61,11 +61,11 @@ while(true)
     if(cmd == "k")
     {
       <<< "looper ready" >>>;
-      now => time timeStartLoop;
-      timeStartLoop - timeStartDrum => dur durSinceDrums;
-      timeStartLoop/durPerMeasure => float curMeasure;
-      Math.floor(curMeasure ) * durPerMeasure => dur tillNextMeasure;
-      tillNextMeasure - durSinceDrums => now;
+      now - timeStartDrum => dur durSinceDrums;
+      durSinceDrums/durPerMeasure => float curMeasure; //current measure after start of drums as float
+      Math.ceil(curMeasure) - curMeasure => float measureLeft;  //fraction of a measure until next measure starts
+      measureLeft * durPerMeasure => dur tillNextMeasure;//time until next measure starts
+      tillNextMeasure => now; //wait until start of next measure and start looper
       Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag );
     }
 
