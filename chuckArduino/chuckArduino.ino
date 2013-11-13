@@ -54,6 +54,11 @@ int potPin = 1;
 int potValue = 0.0;
 int prevPotValue = 0.0;
 
+//pot 2
+int potPin2 = 2;
+int potValue2 = 0.0;
+int prevPotValue2 = 0.0;
+
 void setup()
 {
   Serial.begin(9600);
@@ -83,6 +88,7 @@ void loop()
   writeHoriz();
   writeShakeX();
   writePot();
+  writePot2();
 
   delay(50); 
 }
@@ -97,6 +103,18 @@ void writePot()
     Serial.print("p");
     Serial.println(potValue);
     prevPotValue = potValue;
+  }
+}
+void writePot2()
+{
+  int val = analogRead(potPin2); 
+  potValue2 = constrain(map(val, 0, 1023, -10, 10),-10, 10);
+  potValue2 = -potValue2;
+  if(potValue2 != prevPotValue2)
+  {
+    Serial.print("q");
+    Serial.println(potValue2);
+    prevPotValue2 = potValue2;
   }
 }
 

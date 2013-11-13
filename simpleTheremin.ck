@@ -20,13 +20,22 @@ Flute instr =>  JCRev r => Gain g =>Pan2 p =>   dac;
 //SONG SETTINGS PASSED TO DRUM MACHINE AND LOOPER
 250 => int tempo; 
 16 => int numBeats;
+
 Constants constants;
-constants.D =>   int key;
-constants.DORIAN @=> int scale[];
-/*2 => int key;*/
-/*[0,2,3,5,7,9,10,12,14,15,17,19,21,23,24] @=> int scale[];*/
-5 => int octave;
-octave * 12 + key => int transpose;
+constants.d =>   int key;
+constants.ionian @=> int scaleBase[];
+5 => int startOctave;
+4 => int octaveRange;
+int scale[scaleBase.cap()*octaveRange];
+startOctave * 12 + key => int transpose;
+//increase scale size
+for(0 => int i; i < scaleBase.cap(); i++)
+{
+  for(0 => int j; j < octaveRange - 1; j++)
+  {
+  scaleBase[i] + j*12 => scale[i + (scaleBase.cap()-1)*j];
+  }
+}
 
 //vars to make LiSa start at beginning of next measure
 //NOTE:  ONCE THIS SHRED IS REMOVED, MEASURES ARE NO LONGER ACCURATE.  STARTTIME IS FROM START OF VM, NOT SHRED
@@ -53,16 +62,12 @@ cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 "" => string cmd;
 scale[2] => instr.freq;
 
-fun void waitTillNextMeasure()
-{
-  now - timeStartDrum => dur durSinceDrums;
-  durSinceDrums/durPerMeasure => float curMeasure; //current measure after start of drums as float
-  <<< "current", curMeasure >>>;
+//synth knob
+SinOsc o => JCRev e => dac;
+0 => o.freq;
+.3 => o.gain;
 
-  Math.ceil(curMeasure) - curMeasure => float measureLeft;  //fraction of a measure until next measure starts
-  measureLeft * durPerMeasure => dur tillNextMeasure;//time until next measure starts
-  tillNextMeasure => now; //wait until start of next measure and start looper
-}
+
 
 while(true)
 {
@@ -74,24 +79,30 @@ while(true)
     line.substring(0,1) => cmd;
     Std.atoi(line.substring(1)) => value;
 
-    //play looper in separate shred so will still sound when restarting main
-    if(cmd == "k")
-    {
-      <<< "looper ready" >>>;
-      waitTillNextMeasure();
-      Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag + ":" + pan );
-    }
+    /*//play looper in separate shred so will still sound when restarting main*/
+    /*if(cmd == "k")*/
+    /*{*/
+      /*<<< "looper ready" >>>;*/
+      /*waitTillNextMeasure();*/
+      /*Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag + ":" + pan );*/
+    /*}*/
 
-    //play looper in separate shred so will still sound when restarting main
-    else if(cmd == "p")
+    //panning
+    if(cmd == "p")
     {
       <<< "pan",  value >>>;
       value/10.0 => pan;
       pan => p.pan;
       <<< p.pan() >>>;
-      
     }
 
+    //synth
+    if(cmd == "q")
+    {
+      <<< "pan",  value >>>;
+      value + 9 => int note;
+      Std.mtof(scale[note] + transpose) => o.freq;
+    }
 
     //volume - always get one of these before any note
     //NOTE - CREATES CLIPPING ON CHANGE OF VOLUME
@@ -145,6 +156,7 @@ while(true)
       (0.0 + value)/10000*2 => percentage;
       frequency*percentage => offset;
       frequency+offset => frequency;
+      o.freq() + offset => o.freq;
     }
 
     //filter
@@ -157,4 +169,17 @@ while(true)
     frequency => instr.freq;
   }
 }
+
+fun void waitTillNextMeasure()
+{
+  now - timeStartDrum => dur durSinceDrums;
+  durSinceDrums/durPerMeasure => float curMeasure; //current measure after start of drums as float
+  <<< "current", curMeasure >>>;
+
+  Math.ceil(curMeasure) - curMeasure => float measureLeft;  //fraction of a measure until next measure starts
+  measureLeft * durPerMeasure => dur tillNextMeasure;//time until next measure starts
+  tillNextMeasure => now; //wait until start of next measure and start looper
+}
+
+
 

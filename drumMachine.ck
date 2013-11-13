@@ -10,14 +10,23 @@ pan => p.pan;
 1.0/numSounds => g.gain;
 0 => int playRandomMelody;
 0 => int currentMelody;
-Constants constants;
-constants.D =>   int key;
-constants.MINPENT   @=> int scale[];
-/*2 => int key;*/
-/*[0,2,3,5,7,9,10,12,14,15,17,19,21,22,24] @=> int scale[];*/
-5 => int octave;
 
-octave * 12 + key => int transpose;
+Constants constants;
+constants.d =>   int key;
+constants.ionian @=> int scaleBase[];
+5 => int startOctave;
+4 => int octaveRange;
+int scale[scaleBase.cap()*octaveRange];
+startOctave * 12 + key => int transpose;
+//increase scale size
+for(0 => int i; i < scaleBase.cap(); i++)
+{
+  for(0 => int j; j < octaveRange - 1; j++)
+  {
+  scaleBase[i] + j*12 => scale[i + (scaleBase.cap()-1)*j];
+  }
+}
+
 
 SndBuf kick => g;
 me.dir() + "audio/kick_05.wav" =>  kick.read;
