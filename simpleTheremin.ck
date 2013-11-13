@@ -13,7 +13,7 @@ BPF f;
 1000 => f.freq;
 
 //main instrument
-Flute instr =>  Pan2 p =>  JCRev r => Gain g => dac;
+Flute instr =>  JCRev r => Gain g =>Pan2 p =>   dac;
 
 0.3 => float instrGain;
 
@@ -22,7 +22,7 @@ Flute instr =>  Pan2 p =>  JCRev r => Gain g => dac;
 16 => int numBeats;
 Constants constants;
 constants.D =>   int key;
-constants.MINPENT @=> int scale[];
+constants.DORIAN @=> int scale[];
 /*2 => int key;*/
 /*[0,2,3,5,7,9,10,12,14,15,17,19,21,23,24] @=> int scale[];*/
 5 => int octave;
@@ -55,13 +55,13 @@ scale[2] => instr.freq;
 
 fun void waitTillNextMeasure()
 {
-      now - timeStartDrum => dur durSinceDrums;
-      durSinceDrums/durPerMeasure => float curMeasure; //current measure after start of drums as float
-      <<< "current", curMeasure >>>;
-      
-      Math.ceil(curMeasure) - curMeasure => float measureLeft;  //fraction of a measure until next measure starts
-      measureLeft * durPerMeasure => dur tillNextMeasure;//time until next measure starts
-      tillNextMeasure => now; //wait until start of next measure and start looper
+  now - timeStartDrum => dur durSinceDrums;
+  durSinceDrums/durPerMeasure => float curMeasure; //current measure after start of drums as float
+  <<< "current", curMeasure >>>;
+
+  Math.ceil(curMeasure) - curMeasure => float measureLeft;  //fraction of a measure until next measure starts
+  measureLeft * durPerMeasure => dur tillNextMeasure;//time until next measure starts
+  tillNextMeasure => now; //wait until start of next measure and start looper
 }
 
 while(true)
@@ -82,11 +82,14 @@ while(true)
       Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag + ":" + pan );
     }
 
-   //play looper in separate shred so will still sound when restarting main
+    //play looper in separate shred so will still sound when restarting main
     else if(cmd == "p")
     {
       <<< "pan",  value >>>;
       value/10.0 => pan;
+      pan => p.pan;
+      <<< p.pan() >>>;
+      
     }
 
 
@@ -120,7 +123,7 @@ while(true)
     else if(cmd == "c")
     {
       <<< drumMachineId, "id" >>>;
-      
+
       if(drumMachineId == -1)
       {
         Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo + ":" +  pan) => drumMachineId;
