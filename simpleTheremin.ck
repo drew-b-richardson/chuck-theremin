@@ -63,16 +63,25 @@ cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 scale[2] => instr.freq;
 
 //synth knob
-SinOsc o => JCRev e => dac;
-0 => o.freq;
+SawOsc o =>BPF filter =>  JCRev r2=>   dac;
+440 => o.freq;
 .3 => o.gain;
+1000 => filter.Q;
 
+
+/*SawOsc lfo => blackhole;*/
+/*5 => lfo.freq;*/
 
 
 while(true)
 {
 
   cereal.onLine() => now;
+  //tremolo 1%
+ /*( lfo.last() * o.freq()/100 ) + o.freq() => o.freq; //vibrato */
+ /*( lfo.last() * 20 ) + 400 +  o.freq() => o.freq; //cascading highs */
+ /*( lfo.last() * 20 ) + o.freq() => o.freq;*/
+
   cereal.getLine() => string line;
   if(line$Object != null)
   {
@@ -97,11 +106,12 @@ while(true)
     }
 
     //synth
-    if(cmd == "q")
+    else if(cmd == "q")
     {
-      <<< "pan",  value >>>;
+      <<< "synth",  value >>>;
       value + 9 => int note;
       Std.mtof(scale[note] + transpose) => o.freq;
+      
     }
 
     //volume - always get one of these before any note
@@ -112,6 +122,10 @@ while(true)
       if(value < 30)
       {
         0 => instr.gain;
+        0 => o.freq;
+        /*0 => filter.freq;*/
+        /*1 => filter.Q;*/
+        
       }
 
       //otherwise change volume 
@@ -160,14 +174,22 @@ while(true)
     }
 
     //filter
-    else if(cmd == "v")
+    else if(cmd == "h")
     {
-      frequency*value/15 + 100  =>  freq;
-      freq => f.freq;
+      (value + 100) *10=> filter.freq;
+      <<< "filter freq", filter.freq() >>>;
+      
     }
 
+    else if(cmd == "v")
+    {
+
+      (0.0 + value)/100 + 0.1 => filter.Q;
+      <<< "filter Q", filter.Q() >>>;
+    }
     frequency => instr.freq;
   }
+
 }
 
 fun void waitTillNextMeasure()
