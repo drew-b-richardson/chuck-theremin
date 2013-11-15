@@ -3,9 +3,9 @@ Std.atoi(me.arg(1)) => int tempo;
 Std.atof(me.arg(2)) => float pan;
 
 Gain g => Pan2 p => dac;
-TriOsc o => g;
+SqrOsc o => g;
 pan => p.pan;
-1 => o.gain;
+0.3 => o.gain;
 4 => int numSounds;
 1.0/numSounds => g.gain;
 0 => int playRandomMelody;
@@ -13,8 +13,8 @@ pan => p.pan;
 
 Constants constants;
 constants.d =>   int key;
-constants.ionian @=> int scaleBase[];
-5 => int startOctave;
+constants.dorian @=> int scaleBase[];
+2 => int startOctave;
 4 => int octaveRange;
 int scale[scaleBase.cap()*octaveRange];
 startOctave * 12 + key => int transpose;

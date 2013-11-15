@@ -1,7 +1,6 @@
-//test
 #include <Wire.h>
 #include <WiiChuck.h>
-
+#include <Bounce.h>
 #include <Ping.h>
 
 //WII SETUP
@@ -44,10 +43,16 @@ int notes[] = {
 
 const int VIBRATO_START = 200;
 
-//drum
-int knockSensor = 0;               
-byte val = 0;
-int THRESHOLD = 70;
+//button
+const int BUTTON_FRONT_PIN =  2;
+Bounce frontDebouncer = Bounce( BUTTON_FRONT_PIN ,10 ); 
+int lastFrontButtonValue = 0;
+
+
+// the follow variables are long's because the time, measured in miliseconds,
+// will quickly become a bigger number than can be stored in an int.
+long time = 0;         // the last time the output pin was toggled
+long debounce = 200;   // the debounce time, increase if the output flickers
 
 //pot
 int potPin = 1;
@@ -62,6 +67,7 @@ int prevPotValue2 = 0.0;
 void setup()
 {
   Serial.begin(9600);
+ pinMode( BUTTON_FRONT_PIN, INPUT);
   chuck.begin();
   chuck.update();
 }
@@ -69,19 +75,10 @@ void setup()
 void loop()
 {
 
-  //knock sensor
-  val = analogRead(knockSensor);  
-  if (val >= THRESHOLD) 
-  {
-    //statePin = !statePin;
-    // digitalWrite(ledPin, statePin);
-    Serial.println("k1");
-    delay(100);
-  }
-
 
   stepNum=getPingValue(0, 10);
   chuck.update();
+  writeFrontButtonValue();
   writeZ(stepNum);
   writeC(stepNum);
   writeVert();
@@ -92,6 +89,27 @@ void loop()
 
   delay(50); 
 }
+
+void writeFrontButtonValue()
+{
+  //update debouncer to see if there was a button state change spanning bounce time
+  frontDebouncer.update ( );
+
+  // Get the updated pin value
+  int frontButtonValue = frontDebouncer.read();
+ 
+ //only send signal if changed
+  if (frontButtonValue != lastFrontButtonValue )
+  {     
+    if (frontButtonValue == HIGH)
+    {
+      Serial.println("b1");
+    }
+    lastFrontButtonValue = frontButtonValue;
+
+  } 
+}
+
 
 void writePot()
 {

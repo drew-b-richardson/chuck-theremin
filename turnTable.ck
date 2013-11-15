@@ -1,5 +1,7 @@
 SndBuf buf  => Pan2 p => dac ;
-me.dir() + "audio/DemConvention.wav" =>  buf.read;
+/*me.dir() + "audio/DemConvention.wav" =>  buf.read;*/
+/*me.dir() + "audio/AbdicationAddress.wav" =>  buf.read;*/
+me.dir() + "audio/AddressonVietnamWarProtests.wav" =>  buf.read;
 0.7 => float g;
 g => buf.gain;
 1 => buf.loop;
@@ -30,8 +32,10 @@ if (buf.pos() >= endPos)
     Std.atoi(line.substring(1)) => value;
 
     //play looper in separate shred so will still sound when restarting main
-    if(cmd == "k")
+    if(cmd == "b")
     {
+      <<< "here" >>>;
+      
       if(buf.gain() == 0)
       {
         g => buf.gain;
@@ -47,25 +51,6 @@ if (buf.pos() >= endPos)
       <<< "pan",  value >>>;
       value/10.0 => p.pan;
     }
-
-
-    /*//volume - always get one of these before any note*/
-    /*//NOTE - CREATES CLIPPING ON CHANGE OF VOLUME*/
-    /*else if (cmd == "y")*/
-    /*{*/
-      /*//if under sound threshold, turn off previous note for silence*/
-      /*if(value < 30)*/
-      /*{*/
-        /*0 => instr.gain;*/
-      /*}*/
-
-      /*//otherwise change volume */
-      /*else*/
-      /*{*/
-        /*(0.0 + value)/100 => volume;*/
-        /*volume => instr.gain;*/
-      /*}*/
-    /*}*/
 
     //play note
     else if(cmd == "z")
@@ -123,14 +108,6 @@ if (buf.pos() >= endPos)
         rate+1 => buf.rate;
     }
 
-    /*//filter*/
-    /*else if(cmd == "v")*/
-    /*{*/
-    /*frequency*value/15 + 100  =>  freq;*/
-    /*freq => f.freq;*/
-    /*}*/
-
-    /*frequency => instr.freq;*/
   }
 }
 

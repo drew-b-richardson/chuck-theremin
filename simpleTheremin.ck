@@ -1,29 +1,30 @@
+//SERIAL INPUT FROM ARDUINO
+SerialIO cereal;
+cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 
-//echo parameters
-Echo e1;
-Echo e2;
-Echo e3;
-1000::ms => e1.max => e2.max => e3.max;
-750::ms => e1.delay => e2.delay => e3.delay;
-.50 => e1.mix => e2.mix => e3.mix;
+//main instrument
+Flute instr =>  JCRev r => Gain g =>Pan2 p =>   dac;
+0.3 => float instrGain;
+
+//synth knob
+SawOsc o =>BPF filter =>  JCRev r2=> Pan2 p2 =>  dac;
+0 => o.freq;
+1 => filter.Q;
+1000 => filter.freq;
+1 => int isStartUp;
+
 
 //filter settings
 BPF f;
 1 => f.Q;
 1000 => f.freq;
 
-//main instrument
-Flute instr =>  JCRev r => Gain g =>Pan2 p =>   dac;
-
-0.3 => float instrGain;
-
 //SONG SETTINGS PASSED TO DRUM MACHINE AND LOOPER
 250 => int tempo; 
 16 => int numBeats;
-
 Constants constants;
 constants.d =>   int key;
-constants.ionian @=> int scaleBase[];
+constants.dorian @=> int scaleBase[];
 5 => int startOctave;
 4 => int octaveRange;
 int scale[scaleBase.cap()*octaveRange];
@@ -44,10 +45,7 @@ for(0 => int i; i < scaleBase.cap(); i++)
 numBeats * tempo::ms => dur durPerMeasure;
 time timeStartDrum;
 
-//SERIAL INPUT FROM ARDUINO
-SerialIO cereal;
-cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
-
+//GLOBAL VARIABLES
 0 => int value;
 100 => float frequency;
 0.0 => float percentage;
@@ -55,63 +53,51 @@ cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 .4 => float volume;
 1000 => float freq;
 0.0 => float pan;
-
-
 -1 => int drumMachineId;
-
 "" => string cmd;
-scale[2] => instr.freq;
-
-//synth knob
-SawOsc o =>BPF filter =>  JCRev r2=>   dac;
-440 => o.freq;
-.3 => o.gain;
-1000 => filter.Q;
-
-
-/*SawOsc lfo => blackhole;*/
-/*5 => lfo.freq;*/
-
 
 while(true)
 {
 
   cereal.onLine() => now;
-  //tremolo 1%
- /*( lfo.last() * o.freq()/100 ) + o.freq() => o.freq; //vibrato */
- /*( lfo.last() * 20 ) + 400 +  o.freq() => o.freq; //cascading highs */
- /*( lfo.last() * 20 ) + o.freq() => o.freq;*/
-
   cereal.getLine() => string line;
   if(line$Object != null)
   {
     line.substring(0,1) => cmd;
     Std.atoi(line.substring(1)) => value;
 
-    /*//play looper in separate shred so will still sound when restarting main*/
-    /*if(cmd == "k")*/
-    /*{*/
-      /*<<< "looper ready" >>>;*/
-      /*waitTillNextMeasure();*/
-      /*Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag + ":" + pan );*/
-    /*}*/
+    //play looper in separate shred so will still sound when restarting main
+    if(cmd == "b")
+    {
+      <<< "looper ready" >>>;
+      waitTillNextMeasure();
+      Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag + ":" + pan );
+    }
 
     //panning
     if(cmd == "p")
     {
       <<< "pan",  value >>>;
       value/10.0 => pan;
-      pan => p.pan;
+      pan => p.pan => p2.pan;
+
       <<< p.pan() >>>;
     }
 
     //synth
     else if(cmd == "q")
     {
-      <<< "synth",  value >>>;
-      value + 9 => int note;
-      Std.mtof(scale[note] + transpose) => o.freq;
-      
+      //arduino sends a note first time, ignore it until user turns knob.
+      if(isStartUp)
+       0  => isStartUp ;
+      else
+      {
+        0.1 => o.gain;
+        <<< "synth",  value >>>;
+        value + 9 => int note;
+        Std.mtof(scale[note] + transpose) => o.freq;
+      }
+
     }
 
     //volume - always get one of these before any note
@@ -122,10 +108,7 @@ while(true)
       if(value < 30)
       {
         0 => instr.gain;
-        0 => o.freq;
-        /*0 => filter.freq;*/
-        /*1 => filter.Q;*/
-        
+        0 => o.gain;
       }
 
       //otherwise change volume 
@@ -148,6 +131,7 @@ while(true)
     else if(cmd == "c")
     {
       <<< drumMachineId, "id" >>>;
+        0 => instr.gain;
 
       if(drumMachineId == -1)
       {
@@ -170,7 +154,7 @@ while(true)
       (0.0 + value)/10000*2 => percentage;
       frequency*percentage => offset;
       frequency+offset => frequency;
-      o.freq() + offset => o.freq;
+      /*o.freq() + offset => o.freq;*/
     }
 
     //filter
@@ -178,7 +162,7 @@ while(true)
     {
       (value + 100) *10=> filter.freq;
       <<< "filter freq", filter.freq() >>>;
-      
+
     }
 
     else if(cmd == "v")
@@ -188,6 +172,7 @@ while(true)
       <<< "filter Q", filter.Q() >>>;
     }
     frequency => instr.freq;
+    1::samp => now;
   }
 
 }
