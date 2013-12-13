@@ -1,10 +1,9 @@
-//SERIAL INPUT FROM ARDUINO
-SerialIO cereal;
-cereal.open(2, SerialIO.B9600, SerialIO.ASCII);
 
 //main instrument
-Flute instr =>  JCRev r => Gain g =>Pan2 p =>   dac;
+BeeThree instr =>  JCRev r => Gain g =>Pan2 p =>   dac;
 0.3 => float instrGain;
+0.2 => r.mix;
+0 => p.pan;
 
 //synth knob
 SawOsc o =>BPF filter =>  JCRev r2=> Pan2 p2 =>  dac;
@@ -23,8 +22,8 @@ BPF f;
 250 => int tempo; 
 16 => int numBeats;
 Constants constants;
-constants.d =>   int key;
-constants.dorian @=> int scaleBase[];
+constants.e =>   int key;
+constants.phrygian @=> int scaleBase[];
 5 => int startOctave;
 4 => int octaveRange;
 int scale[scaleBase.cap()*octaveRange];
@@ -34,7 +33,7 @@ for(0 => int i; i < scaleBase.cap(); i++)
 {
   for(0 => int j; j < octaveRange - 1; j++)
   {
-  scaleBase[i] + j*12 => scale[i + (scaleBase.cap()-1)*j];
+    scaleBase[i] + j*12 => scale[i + (scaleBase.cap()-1)*j];
   }
 }
 
@@ -51,129 +50,124 @@ time timeStartDrum;
 0.0 => float percentage;
 0.0 => float offset;
 .4 => float volume;
-1000 => float freq;
+1=> int noteNumber;
 0.0 => float pan;
 -1 => int drumMachineId;
+-1 => int bassId;
 "" => string cmd;
+int noteOn;
+"" => string prevCmd;
+1 => int isBend;
+0 => int isVolume;
 
-while(true)
+//receive values
+while (true)
 {
+  constants.arduinoEvent => now;
+  constants.arduinoEvent.cmd => cmd;
+  constants.arduinoEvent.value => value;
 
-  cereal.onLine() => now;
-  cereal.getLine() => string line;
-  if(line$Object != null)
+  //play note
+  if (cmd == "n")
   {
-    line.substring(0,1) => cmd;
-    Std.atoi(line.substring(1)) => value;
-
-    //play looper in separate shred so will still sound when restarting main
-    if(cmd == "b")
+    if (value == 0)
     {
-      <<< "looper ready" >>>;
-      waitTillNextMeasure();
-      Machine.add( "simpleMicLooper.ck:" + numBeats + ":" + tempo + ":" + lag + ":" + pan );
+      0 => instr.noteOn;
     }
-
-    //panning
-    if(cmd == "p")
+    else
     {
-      <<< "pan",  value >>>;
-      value/10.0 => pan;
-      pan => p.pan => p2.pan;
-
-      <<< p.pan() >>>;
-    }
-
-    //synth
-    else if(cmd == "q")
-    {
-      //arduino sends a note first time, ignore it until user turns knob.
-      if(isStartUp)
-       0  => isStartUp ;
-      else
-      {
-        0.1 => o.gain;
-        <<< "synth",  value >>>;
-        value + 9 => int note;
-        Std.mtof(scale[note] + transpose) => o.freq;
-      }
-
-    }
-
-    //volume - always get one of these before any note
-    //NOTE - CREATES CLIPPING ON CHANGE OF VOLUME
-    else if (cmd == "y")
-    {
-      //if under sound threshold, turn off previous note for silence
-      if(value < 30)
-      {
-        0 => instr.gain;
-        0 => o.gain;
-      }
-
-      //otherwise change volume 
-      else
-      {
-        (0.0 + value)/100 => volume;
-        volume => instr.gain;
-      }
-    }
-
-    //play note
-    else if(cmd == "z")
-    {
-      /*<<< value, scale[value], transpose >>>;*/
-      Std.mtof(scale[value] + transpose) =>	frequency;
+      Std.mtof(scale[value -1] + transpose) =>	frequency;
       instrGain => instr.noteOn;
     }
-
-    //start drum machine
-    else if(cmd == "c")
-    {
-      <<< drumMachineId, "id" >>>;
-        0 => instr.gain;
-
-      if(drumMachineId == -1)
-      {
-        Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo + ":" +  pan) => drumMachineId;
-        now => timeStartDrum;
-      }
-      else
-      {
-        <<< "else" >>>;
-
-        waitTillNextMeasure();
-        Machine.replace( drumMachineId, "drumMachine.ck:" + numBeats + ":" + tempo + ":" + pan ) => drumMachineId;
-        now => timeStartDrum;
-      }
-    }
-
-    //vibrato - amount is percentage of original freq
-    else if(cmd == "s")
-    {
-      (0.0 + value)/10000*2 => percentage;
-      frequency*percentage => offset;
-      frequency+offset => frequency;
-      /*o.freq() + offset => o.freq;*/
-    }
-
-    //filter
-    else if(cmd == "h")
-    {
-      (value + 100) *10=> filter.freq;
-      <<< "filter freq", filter.freq() >>>;
-
-    }
-
-    else if(cmd == "v")
-    {
-
-      (0.0 + value)/100 + 0.1 => filter.Q;
-      <<< "filter Q", filter.Q() >>>;
-    }
-    frequency => instr.freq;
-    1::samp => now;
   }
+
+  //start drum machine
+  else if(cmd == "d")
+  {
+    <<< drumMachineId, "id" >>>;
+
+    if(drumMachineId == -1)
+    {
+      Machine.add( "drumMachine.ck:" + numBeats + ":" + tempo + ":" +  pan) => drumMachineId;
+      now => timeStartDrum;
+    }
+    else
+    {
+      waitTillNextMeasure();
+      Machine.replace( drumMachineId, "drumMachine.ck:" + numBeats + ":" + tempo + ":" + pan ) => drumMachineId;
+      now => timeStartDrum;
+    }
+  }
+
+  //start bass 
+  else if(cmd == "b")
+  {
+    <<< bassId, "id" >>>;
+
+    if(bassId == -1)
+    {
+      Machine.add( "bass.ck:" + numBeats + ":" + tempo + ":" +  pan) => bassId;
+      now => timeStartDrum;
+    }
+    else
+    {
+      waitTillNextMeasure();
+      Machine.replace( bassId, "bass.ck:" + numBeats + ":" + tempo + ":" + pan ) => bassId;
+      now => timeStartDrum;
+    }
+  }
+
+  //change octave
+  else if(cmd == "o")
+  {
+    value + startOctave => startOctave;
+    startOctave * 12 + key =>  transpose;
+  }
+
+  //instr pan
+  else if(cmd == "h")
+  {
+    value/100.0 => p.pan;
+  }
+
+  //instr gain
+  else if(cmd == "v")
+  {
+      value/100.0 => instr.gain;
+  }
+
+  //vibrato - amount is percentage of original freq
+  else if(cmd == "s")
+  {
+    (0.0 + value)/10000*2 => percentage;
+    frequency*percentage => offset;
+    frequency+offset => frequency;
+    /*o.freq() + offset => o.freq;*/
+  }
+
+  //play looper in separate shred so will still sound when restarting main
+  else if(cmd == "l")
+  {
+  <<< "looper ready" >>>;
+  waitTillNextMeasure();
+  Machine.add( "/docs/chuck/theremin/simpleMicLooper.ck:" + numBeats * value + ":" + tempo + ":" + lag + ":" + pan );
+  }
+
+  //play the local version of the file number in question
+  if(cmd == "f")
+  {
+      Machine.add("file" + value + ".ck");
+  }
+  
+  //play turntable
+  if(cmd == "t")
+  {
+      Machine.add("/docs/chuck/theremin/turnTable.ck");
+  }
+
+  frequency => instr.freq;
+  " " => cmd;
+  1::samp => now;
 
 }
 

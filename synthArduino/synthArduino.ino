@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <WiiChuck.h>
+#include <Bounce.h>
 #include <Ping.h>
 
 //WII SETUP
@@ -34,8 +35,9 @@ int lastX =0;
 int mappedY = 0;
 int y=0;
 int lastY =0;
+
 boolean isShakeOn = false;
-int previousRoll = 0;
+
 
 int stepNum=0;
 int notes[] = {
@@ -50,49 +52,40 @@ long time = 0;         // the last time the output pin was toggled
 long debounce = 200;   // the debounce time, increase if the output flickers
 
 //pot
-int potPin = 1;
+int potPin = 2;
 int potValue = 0.0;
 int prevPotValue = 0.0;
 
 //pot 2
-int potPin2 = 2;
+int potPin2 = 3;
 int potValue2 = 0.0;
 int prevPotValue2 = 0.0;
 
 void setup()
 {
-  Serial.begin(9600);
-  chuck.begin();
-  chuck.update();
+Serial.begin(9600);  
+chuck.begin();
+chuck.update();
 }
 
 void loop()
 {
+
+  //  stepNum=getPingValue(0, 10);
   chuck.update();
-  
+//  writeFrontButtonValue();
+//  writeButton2Value();
   writeZ();
   writeC();
   writeVert();
   writeHoriz();
   writeShakeX();
-  writeRoll();
+//  writePot();
+//  writePot2();
 
   delay(50); 
 }
 
-void writeRoll()
-{
-if(isShakeOn)
-{
-  int roll = (int)chuck.readRoll();
-  if(roll < previousRoll - 2 || roll > previousRoll + 2)
-  {
-    Serial.print("r");
-    Serial.println((int)chuck.readRoll());
-    previousRoll = roll;
-  }
-}
-}
 
 void writePot()
 {
@@ -124,8 +117,7 @@ void writeZ()
   if(chuck.zPressed())
   {
     writePitch();
-    Serial.print("z");
-    Serial.println(stepNum);
+    Serial.println("z0");
   }
 }
 
@@ -189,7 +181,6 @@ void writeShakeX()
       lastX = 0;
     }
   }
-
   }
 }
 
