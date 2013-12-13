@@ -63,9 +63,9 @@ int noteOn;
 //receive values
 while (true)
 {
-  constants.arduinoEvent => now;
-  constants.arduinoEvent.cmd => cmd;
-  constants.arduinoEvent.value => value;
+  constants.event => now;
+  constants.event.cmd => cmd;
+  constants.event.value => value;
 
   //play note
   if (cmd == "n")

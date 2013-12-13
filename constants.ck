@@ -36,10 +36,10 @@ public  class Constants
   10 => static int as;
   11 => static int b;
 
- static ArduinoEvent @ arduinoEvent;
+ static CustomEvent @ event;
  static int key;
  static int scale[];
 }
 
-new ArduinoEvent @=> Constants.arduinoEvent;
+new CustomEvent @=> Constants.event;
 

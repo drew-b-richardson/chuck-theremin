@@ -35,82 +35,82 @@ while( true )
       if (msg.which >=59 && msg.which <= 68 )
       {
         
-        "n" => constants.arduinoEvent.cmd;
-        msg.which - 58 + 7 => constants.arduinoEvent.value;
+        "n" => constants.event.cmd;
+        msg.which - 58 + 7 => constants.event.value;
       }
 
       //if between 1 and 9, send note numnber
       else if (msg.which >=2 && msg.which <= 10 )
       {
-        "n" => constants.arduinoEvent.cmd;
-        msg.which - 1 => constants.arduinoEvent.value;
+        "n" => constants.event.cmd;
+        msg.which - 1 => constants.event.value;
         <<< "which", msg.which >>>;
       }
 
       //if 0, send note off.  good for stopping long playing instruments
       else if(msg.which == 11) 
       {
-       "n" => constants.arduinoEvent.cmd;
-       0 => constants.arduinoEvent.value;
+       "n" => constants.event.cmd;
+       0 => constants.event.value;
       }
       
       //up arrow increases octave
       else if(msg.which == 200) 
       {
-       "o" => constants.arduinoEvent.cmd;
-       1 => constants.arduinoEvent.value;
+       "o" => constants.event.cmd;
+       1 => constants.event.value;
       }
 
       //up arrow increases octave
       else if(msg.which == 208) 
       {
-       "o" => constants.arduinoEvent.cmd;
-       -1 => constants.arduinoEvent.value;
+       "o" => constants.event.cmd;
+       -1 => constants.event.value;
       }
 
      //b starts drum machine
       else if(msg.which == 48) 
       {
-       "b" => constants.arduinoEvent.cmd;
-       0 => constants.arduinoEvent.value;
+       "b" => constants.event.cmd;
+       0 => constants.event.value;
       }
 
      //d starts drum machine
       else if(msg.which == 32) 
       {
-       "d" => constants.arduinoEvent.cmd;
-       0 => constants.arduinoEvent.value;
+       "d" => constants.event.cmd;
+       0 => constants.event.value;
       }
 
       //l starts looper
       else if(msg.which == 38) 
       {
-       "l" => constants.arduinoEvent.cmd;
-       2 => constants.arduinoEvent.value;
+       "l" => constants.event.cmd;
+       2 => constants.event.value;
       }
 
       //number keypad 1 to call file
       else if(msg.which == 79) 
       {
-       "f" => constants.arduinoEvent.cmd;
-       1 => constants.arduinoEvent.value;
+       "f" => constants.event.cmd;
+       1 => constants.event.value;
       }
 
       //number keypad 2 to call file
       else if(msg.which == 80) 
       {
-       "f" => constants.arduinoEvent.cmd;
-       2 => constants.arduinoEvent.value;
+       "f" => constants.event.cmd;
+       2 => constants.event.value;
       }
 
       //'t' will start turntable
       else if(msg.which == 20) 
       {
-       "t" => constants.arduinoEvent.cmd;
+       "t" => constants.event.cmd;
       }
 
     }
-    constants.arduinoEvent.broadcast();
+    constants.event.broadcast();
     1::samp => now;
   }
 }

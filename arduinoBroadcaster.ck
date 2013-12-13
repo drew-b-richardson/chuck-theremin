@@ -11,9 +11,9 @@ while(true)
   cereal.getLine() => string line;
   if(line$Object != null)
   {
-    line.substring(0,1) => constants.arduinoEvent.cmd;
-    Std.atoi(line.substring(1)) => constants.arduinoEvent.value;
-    constants.arduinoEvent.broadcast();
+    line.substring(0,1) => constants.event.cmd;
+    Std.atoi(line.substring(1)) => constants.event.value;
+    constants.event.broadcast();
     1::samp => now;
   }
 }
