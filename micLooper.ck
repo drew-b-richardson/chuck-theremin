@@ -1,3 +1,4 @@
+Constants c;
 adc => LiSa lisa => Pan2 p => dac;
 <<< "enter looper" >>>;
 
@@ -6,7 +7,7 @@ Std.atof(me.arg(1)) => float tempo;
 Std.atof(me.arg(2)) => float lag;
 Std.atof(me.arg(3)) => float pan;
 pan => p.pan;
-tempo::ms * numBeats => dur measureTime;
+c.tempo::second * c.numBeats => dur measureTime;
 measureTime => lisa.duration;
 1 => lisa.loop;
 1 =>  lisa.record;

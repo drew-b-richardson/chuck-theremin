@@ -28,8 +28,8 @@ while( true )
     // filter out button down events
     if( msg.isButtonDown() )
     {
-   <<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;
-      // take ascii value of button, convert to freq
+
+   /*<<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;*/
 
       //function keys for octave above notes
       if (msg.which >=59 && msg.which <= 68 )
@@ -75,8 +75,8 @@ while( true )
        0 => constants.event.value;
       }
 
-     //d starts drum machine
-      else if(msg.which == 32) 
+     //b starts beat
+      else if(msg.which == 48) 
       {
        "d" => constants.event.cmd;
        0 => constants.event.value;
@@ -102,16 +102,43 @@ while( true )
        "f" => constants.event.cmd;
        2 => constants.event.value;
       }
-
-      //'t' will start turntable
-      else if(msg.which == 20) 
+      //number keypad 3 to call file
+      else if(msg.which == 81) 
       {
-       "t" => constants.event.cmd;
+       "f" => constants.event.cmd;
+       3 => constants.event.value;
       }
 
+      //'m' will set scale/mode
+      else if(msg.which == 50) 
+      {
+        "m" => constants.event.cmd;
+      }
+
+      //'i' will set scale/mode
+      else if(msg.which == 23) 
+      {
+        "i" => constants.event.cmd;
+      }
+
+      //'d' will set delay 
+      else if(msg.which == 32) 
+      {
+        "d" => constants.event.cmd;
+      }
+      //'r' will start rhythm track 
+      else if(msg.which == 19) 
+      {
+        "r" => constants.event.cmd;
+      }
+      //'-' will replace all shreds with 2nd verse
+      else if(msg.which == 74) 
+      {
+        "-" => constants.event.cmd;
+      }
+      constants.event.broadcast();
+      1::samp => now;
     }
-    constants.event.broadcast();
-    1::samp => now;
   }
 }
 

@@ -12,18 +12,16 @@ pan => p.pan;
 0 => int currentMelody;
 
 Constants constants;
-constants.d =>   int key;
-constants.dorian @=> int scaleBase[];
 2 => int startOctave;
 4 => int octaveRange;
-int scale[scaleBase.cap()*octaveRange];
-startOctave * 12 + key => int transpose;
+int scale[constants.scale.cap()*octaveRange];
+startOctave * 12 + constants.key => int transpose;
 //increase scale size
-for(0 => int i; i < scaleBase.cap(); i++)
+for(0 => int i; i < constants.scale.cap(); i++)
 {
   for(0 => int j; j < octaveRange - 1; j++)
   {
-  scaleBase[i] + j*12 => scale[i + (scaleBase.cap()-1)*j];
+  constants.scale[i] + j*12 => scale[i + (constants.scale.cap()-1)*j];
   }
 }
 

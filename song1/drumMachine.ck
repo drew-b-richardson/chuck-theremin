@@ -1,7 +1,7 @@
 Std.atoi(me.arg(0)) => int numBeats;
-Std.atoi(me.arg(1)) => int tempo;
+Std.atof(me.arg(1)) => float tempo;
 Std.atof(me.arg(2)) => float pan;
-
+<<< "tempo", tempo >>>;
 Gain g => Pan2 p => dac;
 pan => p.pan;
 4 => int numSounds;
@@ -77,7 +77,7 @@ while(play)
   if(beat == kicks.cap() -1)
     measure++;
 
-  tempo::ms => now; 
+  tempo::second => now; 
 
 }
 
