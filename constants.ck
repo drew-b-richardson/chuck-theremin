@@ -46,6 +46,9 @@ public  class Constants
   static CustomEvent @ event;
   static int key;
   static int scale[];
+  8 => int octaveRange;
+  1 => int startOctave;
+  int fullScale[ionian.cap() * (octaveRange)];
 
   0 => static int currentMeasure;
 
@@ -54,6 +57,39 @@ public  class Constants
     numBeatsPerMeasure * numMeasures => numBeats;
     60.0 * numBeatsPerMeasure  / (bpm * baseBeat   ) => tempo;
   }
+
+  fun void setKey(int newKey)
+  {
+    newKey => key;
+    populateScale();
+  }
+
+  fun void setScale(int newScale[])
+  {
+    newScale @=> scale;
+    populateScale();
+  }
+
+  fun void setKeyAndScale(int newKey, int newScale[])
+  {
+    newScale @=> scale;
+    newKey => key;
+    populateScale();
+  }
+
+  fun void populateScale()
+  {
+    for(0 => int i; i < scale.cap(); i++)
+    {
+      for(0 => int j; j < octaveRange; j++)
+      {
+        /*i + j => fullScale[i + (scale.cap()-1)*j];*/
+        scale[i] + j*12 + key @=> fullScale[i + (scale.cap()-1)*j];
+      }
+    }
+  }
+
+
 }
 
 new CustomEvent @=> Constants.event;

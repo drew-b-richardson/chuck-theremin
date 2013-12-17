@@ -8,26 +8,27 @@ BlowBotl inst3 @=> inst[3];
 inst[0] @=> StkInstrument instr;
 
 //main instrument
-instr =>  JCRev r => Gain g =>Pan2 p =>   dac;
-0.3 => float instrGain;
+instr =>   JCRev r => Gain g =>Pan2 p =>   dac;
+0.2 => float instrGain;
 0.2 => r.mix;
 0 => p.pan;
 
-//SONG SETTINGS PASSED TO DRUM MACHINE AND LOOPER
-Constants constants;
-/*constants.e =>   int key;*/
-/*constants.phrygian @=> int scaleBase[];*/
+Constants c;
+
+Delay delay;
+instr => delay => delay => p;
+0 => int isDelay;
+0.0 => delay.gain;
+c.tempo::second * c.numBeatsPerMeasure => delay.max => delay.delay;
+
 5 => int startOctave;
-4 => int octaveRange;
-int scale[constants.scale.cap()*octaveRange];
-startOctave * 12 + constants.key => int transpose;
-populateScale(); 
+
 
 //vars to make LiSa start at beginning of next measure
 //NOTE:  ONCE THIS SHRED IS REMOVED, MEASURES ARE NO LONGER ACCURATE.  STARTTIME IS FROM START OF VM, NOT SHRED
 1 => int playFromMeasure;
 200 => int lag;
-constants.numBeats * constants.tempo::second => dur durPerMeasure;
+c.numBeats * c.tempo::second => dur durPerMeasure;
 time timeStartDrum;
 
 //GLOBAL VARIABLES
@@ -56,16 +57,16 @@ now => timeStartDrum;
 1 => int currentSection;
 
 float curMeasure; //current measure after start of drums as float
-  float measureLeft;  //fraction of a measure until next measure starts
-  dur tillNextMeasure;//time until next measure starts
+float measureLeft;  //fraction of a measure until next measure starts
+dur tillNextMeasure;//time until next measure starts
 
 
 //receive values
 while (true)
 {
-  constants.event => now;
-  constants.event.cmd => cmd;
-  constants.event.value => value;
+  c.event => now;
+  c.event.cmd => cmd;
+  c.event.value => value;
 
   //play note
   if (cmd == "n")
@@ -85,18 +86,16 @@ while (true)
       <<< "value", value >>>;
       if(value==1)
       {
-        constants.ionian @=> constants.scale;
+        c.setScale(c.ionian);
       }
       else if(value==2)
       {
-        constants.dorian @=> constants.scale;
+        c.setScale(c.dorian);
       }
-
       else
       {
-        constants.gypsy @=> constants.scale;
+        c.setScale(c.gypsy);
       }
-      populateScale();
     }
 
     //if there were no previous messages, this is just a 1st octave note to be played
@@ -104,17 +103,19 @@ while (true)
     {
       if (value == 0)
       {
-        0 => instr.noteOn;
+        instrGain => instr.noteOff;
       }
       else
       {
-        setKey();
-        Std.mtof(scale[value -1] + transpose) =>	frequency;
+        //if we want to have other shreds update key, need to have this since arrays cant be static
+        c.populateScale(); //if we don't mind setting it manually this can go away
+
+        Std.mtof(c.fullScale[value-1] + startOctave*12) => frequency;
         instrGain => instr.noteOn;
       }
     }
-      " " => previousMsg;
-    
+    " " => previousMsg;
+
   }
 
   //start drum machine
@@ -124,13 +125,13 @@ while (true)
 
     if(drumMachineId == -1)
     {
-      /*Machine.add( "drumMachine.ck:" + constants.numBeats + ":" + constants.tempo + ":" +  pan) => drumMachineId;*/
+      /*Machine.add( "drumMachine.ck:" + c.numBeats + ":" + c.tempo + ":" +  pan) => drumMachineId;*/
       now => timeStartDrum;
     }
     else
     {
       waitTillNextMeasure();
-      /*Machine.replace( drumMachineId, "drumMachine.ck:" + constants.numBeats + ":" + constants.tempo + ":" + pan ) => drumMachineId;*/
+      /*Machine.replace( drumMachineId, "drumMachine.ck:" + c.numBeats + ":" + c.tempo + ":" + pan ) => drumMachineId;*/
       now => timeStartDrum;
     }
   }
@@ -138,8 +139,7 @@ while (true)
   //change octave
   else if(cmd == "o")
   {
-    value + startOctave => startOctave;
-    startOctave * 12 + constants.key =>  transpose;
+    startOctave + value => startOctave;
   }
 
   //instr pan
@@ -168,7 +168,7 @@ while (true)
   {
     <<< "looper ready" >>>;
     waitTillNextMeasure();
-    Machine.add( "/docs/chuck/theremin/micLooper.ck:" + constants.numBeats * value + ":" + constants.tempo + ":" + lag + ":" + pan );
+    Machine.add( "/docs/chuck/theremin/micLooper.ck:" + c.numBeats * value + ":" + c.tempo + ":" + lag + ":" + pan );
   }
 
   //check if switching song section
@@ -230,11 +230,11 @@ while (true)
 
   if (cmd == "d")
   {
-    Delay delay;
-    0.6 => delay.gain;
-    constants.tempo::second * constants.numBeatsPerMeasure => delay.max => delay.delay;
-
-    instr => delay => delay => p;
+    toggle(isDelay) => isDelay;
+    if (isDelay)
+      0.6 => delay.gain;
+    else
+      0.0 => delay.gain;
   }
 
   frequency => instr.freq;
@@ -273,21 +273,6 @@ fun void removeFile(int value, int fileId)
   -1 @=> fileIds[value - 1];
 }
 
-
-
-//populate notes to be played based on # octabes and which scale is chosen in constants
-fun void populateScale()
-{
-  for(0 => int i; i < constants.scale.cap(); i++)
-  {
-    for(0 => int j; j < octaveRange - 1; j++)
-    {
-      constants.scale[i] + j*12 => scale[i + (constants.scale.cap()-1)*j];
-    }
-  }
-
-}
-
 fun void waitTillNextMeasure()
 {
   now - timeStartDrum => dur durSinceDrums;
@@ -298,12 +283,19 @@ fun void waitTillNextMeasure()
   tillNextMeasure => now; //wait until start of next measure and start looper
 }
 
-fun void setKey()
+fun int toggle(int bool)
 {
-    /*key =>   constants.key;*/
-    /*scale @=> constants.scale; */
-    startOctave * 12 + constants.key => transpose;
-    populateScale(); 
+  if (bool == 1)
+  {
+    <<< "is 0" >>>;
+    0 => bool;
+  }
+  else if (bool == 0)
+  {
+    <<< "is 1" >>>;
+   1 => bool;
+  }
+  return bool;
 }
 
 

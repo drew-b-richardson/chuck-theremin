@@ -29,26 +29,30 @@ while( true )
     if( msg.isButtonDown() )
     {
 
-   /*<<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;*/
+   <<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;
 
       //function keys for octave above notes
-      if (msg.which >=59 && msg.which <= 68 )
+      if (msg.which >=59 && msg.which <= 68 || (msg.which == 87 || msg.which == 88 ))
       {
-        
+        msg.which - 59 => int funNumber; 
+        if (msg.which == 87 || msg.which == 88)
+        {
+         msg.which - 85 + constants.scale.cap() => funNumber; 
+        }
         "n" => constants.event.cmd;
-        msg.which - 58 + 7 => constants.event.value;
+        funNumber + constants.scale.cap() => constants.event.value;
       }
 
       //if between 1 and 9, send note numnber
-      else if (msg.which >=2 && msg.which <= 10 )
+      else if (msg.which >=2 && msg.which <= 11 )
       {
         "n" => constants.event.cmd;
         msg.which - 1 => constants.event.value;
         <<< "which", msg.which >>>;
       }
 
-      //if 0, send note off.  good for stopping long playing instruments
-      else if(msg.which == 11) 
+      //if -, send note off.  good for stopping long playing instruments
+      else if(msg.which == 12) 
       {
        "n" => constants.event.cmd;
        0 => constants.event.value;

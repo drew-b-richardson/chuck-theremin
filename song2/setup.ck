@@ -1,8 +1,7 @@
 
 //set initial key and scale values
 Constants c;
-c.g =>   c.key;
-c.aeolian @=> c.scale;
+c.setKeyAndScale(c.g, c.aeolian);
 
 // basic pattern is 4 measures of 6/8 
 240.0 => c.bpm;
@@ -11,5 +10,4 @@ c.aeolian @=> c.scale;
 8 => c.baseBeat;
 c.setTempo();
 <<< "tempo", c.tempo >>>;
-
 
