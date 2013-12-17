@@ -27,22 +27,35 @@ while(true)
 {
   updateBeat();
 
-  playSndBuf(hihats[beat], hihat);
+  if (hihats[beat])
+  {
+    0  => hihat.pos;
+  }
 
   if (section == 2)
-    playSndBuf(kicks2[beat], kick);
+  {
+    if (kicks2[beat])
+    {
+      0  => kick.pos;
+    }
+  }
   else
-    playSndBuf(kicks[beat], kick);
+  {
+    if (kicks[beat])
+    {
+      0  => kick.pos;
+    }
+  }
 
   progress();
 }
 
 fun int playSndBuf(int doPlay, SndBuf buffer)
 {
-    if (doPlay)
-    {
-      0  => buffer.pos;
-    }
+  if (doPlay)
+  {
+    0  => buffer.pos;
+  }
 }
 
 fun void updateBeat()

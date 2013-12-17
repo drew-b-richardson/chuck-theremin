@@ -108,6 +108,7 @@ while (true)
       }
       else
       {
+        setKey();
         Std.mtof(scale[value -1] + transpose) =>	frequency;
         instrGain => instr.noteOn;
       }
@@ -185,12 +186,12 @@ while (true)
     {
       value => currentSection;
       //check to see if any other existing threads, if so, wait
-      waitTillNextMeasure();
       for(0 => int i; i < fileIds.cap(); i++)
       {
         if(fileIds[i] > -1)
         {
-          Machine.replace(fileIds[i], "file" + (i+1) + ".ck:" + currentSection);
+          spork ~ replaceFile(i+1, fileIds[i]);
+          /*Machine.replace(fileIds[i], "file" + (i+1) + ".ck:" + currentSection);*/
         }
       }
       " " => previousMsg;
@@ -238,7 +239,7 @@ while (true)
 
   frequency => instr.freq;
   " " => cmd;
-  20::ms => now;
+  1::samp => now;
 
 }
 
@@ -250,11 +251,12 @@ fun void addNewFile(int value)
     if(fileIds[i] > -1)
     {
       waitTillNextMeasure();
+      1::ms => now;
       break;
     }
   }
   Machine.add("file" + value + ".ck:" + currentSection) @=> fileIds[value - 1];
-  now => timeStartDrum;
+  now  => timeStartDrum;
 }
 
 fun void replaceFile(int value, int fileId)
@@ -296,5 +298,12 @@ fun void waitTillNextMeasure()
   tillNextMeasure => now; //wait until start of next measure and start looper
 }
 
+fun void setKey()
+{
+    /*key =>   constants.key;*/
+    /*scale @=> constants.scale; */
+    startOctave * 12 + constants.key => transpose;
+    populateScale(); 
+}
 
 

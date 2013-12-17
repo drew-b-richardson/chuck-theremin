@@ -24,26 +24,35 @@ while(true)
 {
   updateBeat();
 
-  if(section == 2)
-    playOscNote(melody2[beat]);
-  else
-    playOscNote(melody[beat]);
-
+  if (melody[beat] > 0)
+  {
+    getFreq(melody[beat]) => osc.freq;
+    1 => env.keyOn;
+  }
 
   progress();
+  1 => env.keyOff;
+}
+
+fun float getFreq(int noteNumber)
+{
+  <<< "noteNum", noteNumber >>>;
+  <<< "transpose", transpose >>>;
+  Std.mtof(scale[noteNumber - 1] + transpose) => float freq;
+  return freq;
 }
 
 fun int playOscNote(int scaleNum)
 {
-    if (scaleNum == 0)
-    {
-      1 => env.keyOff;
-    }
-    else
-    {
-      Std.mtof(scale[scaleNum-1] + transpose) =>	osc.freq;
-      1 => env.keyOn;
-    }
+  if (scaleNum == 0)
+  {
+    1 => env.keyOff;
+  }
+  else
+  {
+    Std.mtof(scale[scaleNum-1] + transpose) =>	osc.freq;
+    1 => env.keyOn;
+  }
 }
 
 //populate notes to be played based on # octabes and which scale is chosen in constants
