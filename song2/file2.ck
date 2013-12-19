@@ -36,8 +36,6 @@ while(true)
 
 fun float getFreq(int noteNumber)
 {
-  <<< "noteNum", noteNumber >>>;
-  <<< "transpose", transpose >>>;
   Std.mtof(scale[noteNumber - 1] + transpose) => float freq;
   return freq;
 }
@@ -54,19 +52,6 @@ fun int playOscNote(int scaleNum)
     1 => env.keyOn;
   }
 }
-
-//populate notes to be played based on # octabes and which scale is chosen in constants
-fun void populateScale()
-{
-  for(0 => int i; i < constants.scale.cap(); i++)
-  {
-    for(0 => int j; j < octaveRange - 1; j++)
-    {
-      constants.scale[i] + j*12 => scale[i + (constants.scale.cap()-1)*j];
-    }
-  }
-}
-
 fun void updateBeat()
 {
   counter % constants.numBeats => beat;  

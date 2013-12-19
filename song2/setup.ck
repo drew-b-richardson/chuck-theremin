@@ -11,3 +11,30 @@ c.setKeyAndScale(c.g, c.aeolian);
 c.setTempo();
 <<< "tempo", c.tempo >>>;
 
+0 => int counter; //this increments forever
+0 => int beat; //this increments and repeats after numBeats
+0 => int measure; //keep track of # of measures
+fun void updateBeat()
+{
+  counter % c.numBeats => beat;  
+  <<< beat >>>;
+}
+
+fun void progress()
+{
+  counter++;
+  if(beat == c.numBeats -1)
+  {
+    measure++;
+    <<< "----------measure---------" >>>;
+  }
+
+  c.tempo::second => now; 
+}
+
+while(false)
+{
+  updateBeat();
+  progress();
+  
+}

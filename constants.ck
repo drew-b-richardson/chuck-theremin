@@ -6,7 +6,7 @@ public  class Constants
   [0,2,4,6,7,9,11,12] @=>  int lydian[];
   [0,2,4,5,7,9,10,12] @=>  int mixolydian[];
   [0,2,3,5,7,8,10,12] @=>  int aeolian[];
-  [0,1,3,5,6,8,10,12] @=>  int locrain[];
+  [0,1,3,5,6,8,10,12] @=>  int locrian[];
   
   [0,3,5,6,7,10,12] @=> int minpent[];
   [0,2,4,7,9,12] @=>  int majpent[];
@@ -52,6 +52,35 @@ public  class Constants
 
   0 => static int currentMeasure;
 
+  fun int[] getScale(int number)
+  {
+    if(number == 1)
+      return ionian;
+    else if(number == 2)
+      return dorian;
+    else if(number == 3)
+      return phrygian ;
+    else if(number == 4)
+      return lydian;
+    else if(number == 5)
+      return mixolydian;
+    else if(number == 6)
+      return aeolian;
+    else if(number == 7)
+      return locrian;
+    else if(number == 8)
+      return minpent;
+    else if(number == 9)
+      return majpent;
+    else if(number == 10)
+      return hungarian;
+    else if(number == 11)
+      return persian;
+    else if(number == 12)
+      return gypsy;
+
+  }
+
   fun void setTempo()
   {
     numBeatsPerMeasure * numMeasures => numBeats;
@@ -88,6 +117,12 @@ public  class Constants
       }
     }
   }
+
+  fun float getFreq(int midiNum, int startOctave)
+  {
+     return Std.mtof(fullScale[midiNum -1] + startOctave*12);
+  }
+    
 
 
 }

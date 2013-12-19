@@ -1,22 +1,55 @@
-StkInstrument inst[4];
+// Dave's Level Meter (free to a good home)
+class LevelMeter extends Chugen {
+    0 => float max_level; 
+
+    fun void resetMax()
+    {
+      0 => max_level;
+    }
+    
+    fun float tick(float in) {
+       Math.max(max_level, in) => max_level;
+       return in;
+    }
+    
+    fun float max() {
+        return max_level;
+    }
+}
+
+Pan2 master;
+
+
+StkInstrument inst[12];
 // make each instrument a different type
 Flute inst0 @=> inst[0];
 Rhodey inst1 @=> inst[1];
 Clarinet inst2 @=> inst[2];
 BlowBotl inst3 @=> inst[3];
+BandedWG inst4 @=> inst[4];
+BlowHole inst5 @=> inst[5];
+Bowed inst6 @=> inst[6];
+Brass inst7 @=> inst[7];
+Mandolin inst8 @=> inst[8];
+ModalBar inst9 @=> inst[9];
+Moog inst10 @=> inst[10];
+Saxofony inst11 @=> inst[11];
+
 
 inst[0] @=> StkInstrument instr;
 
 //main instrument
-instr =>   JCRev r => Gain g =>Pan2 p =>   dac;
+instr => NRev rev => Chorus chorus => Pan2 p =>  Gain g => LevelMeter meter =>  dac;
+0.2 => chorus.modDepth;
 0.2 => float instrGain;
-0.2 => r.mix;
+0.2 => rev.mix;
+0.0 => chorus.mix;
 0 => p.pan;
 
 Constants c;
 
 Delay delay;
-instr => delay => delay => p;
+rev => delay => delay => p;
 0 => int isDelay;
 0.0 => delay.gain;
 c.tempo::second * c.numBeatsPerMeasure => delay.max => delay.delay;
@@ -68,73 +101,120 @@ while (true)
   c.event.cmd => cmd;
   c.event.value => value;
 
-  //play note
+  //if starts distorting, cut back on reverb
+  if(meter.max() > 0.9)
+  {
+    <<< "danger" >>>;
+    rev.mix() - 0.2 => rev.mix;
+    meter.resetMax();
+  }
+
+  //for all keys that require a following action:
+  if(cmd == "m" || cmd == "i" || cmd == "r" || cmd == "d" || cmd == "c" || cmd == "-" || cmd == "=" || cmd == "_")
+  {
+    cmd => previousMsg;
+  }
+
+  //top number keys and function keys
   if (cmd == "n")
   {
     //change instrument
     if (previousMsg == "i")
     {
-      0.6 => instr.noteOff;
-      instr =< r;
-      inst[value] @=> instr;
-      instr =>  r => Gain g =>Pan2 p =>   dac;
+      instrGain => instr.noteOff;
+      instr =< rev;
+      inst[value - 1] @=> instr;  
+      instr =>  rev ;
+    }
+
+    //change reverb
+    else if (previousMsg == "r")
+    {
+      (value - 1)/10.0 => rev.mix;
+    }
+
+    //change delay
+    else if (previousMsg == "d")
+    {
+      (value - 1)/10.0 => delay.gain;
+    }
+
+    //up half step
+    else if (previousMsg == "=")
+    {
+      <<< "here1" >>>;
+        Std.mtof(c.fullScale[value-1] + startOctave*12 + 1) => frequency;
+    }
+
+    //down half step
+    else if (previousMsg == "_")
+    {
+      <<< "here2" >>>;
+        Std.mtof(c.fullScale[value-1] + startOctave*12 - 1) => frequency;
+    }
+
+    //change chorus
+    else if (previousMsg == "c")
+    {
+      (value - 1)/10.0 => chorus.mix;
     }
 
     //change scale
-    if (previousMsg == "m")
+    else if (previousMsg == "m")
     {
-      <<< "value", value >>>;
-      if(value==1)
-      {
-        c.setScale(c.ionian);
-      }
-      else if(value==2)
-      {
-        c.setScale(c.dorian);
-      }
-      else
-      {
-        c.setScale(c.gypsy);
-      }
+      c.setScale(c.getScale(value));
+      c.populateScale();  
     }
 
-    //if there were no previous messages, this is just a 1st octave note to be played
+    //if there were no previous messages, just play note
     else
     {
-      if (value == 0)
-      {
-        instrGain => instr.noteOff;
-      }
-      else
-      {
-        //if we want to have other shreds update key, need to have this since arrays cant be static
-        c.populateScale(); //if we don't mind setting it manually this can go away
-
-        Std.mtof(c.fullScale[value-1] + startOctave*12) => frequency;
-        instrGain => instr.noteOn;
-      }
+      c.populateScale(); //if we don't mind setting it manually this can go away
+      Std.mtof(c.fullScale[value-1] + startOctave*12) => frequency;
+      instrGain => instr.noteOn;
     }
-    " " => previousMsg;
+
+    " " => previousMsg; //clear out previous message
 
   }
 
-  //start drum machine
-  else if(cmd == "b")
+  //backspace turns off note
+  else if(cmd == "bs")
   {
-    <<< drumMachineId, "id" >>>;
+    instrGain => instr.noteOff;
+  }
 
-    if(drumMachineId == -1)
+  //numpad numbers 1-9
+  else if(cmd == "f")
+  { 
+    //if switching song section
+    if (previousMsg == "-")
     {
-      /*Machine.add( "drumMachine.ck:" + c.numBeats + ":" + c.tempo + ":" +  pan) => drumMachineId;*/
-      now => timeStartDrum;
+      value => currentSection;
+      for(0 => int i; i < fileIds.cap(); i++)
+      {
+        spork ~ replaceFile(i+1, fileIds[i]);
+      }
+      " " => previousMsg;
     }
+
+    //otherwise, just starting or stopping shred
     else
     {
-      waitTillNextMeasure();
-      /*Machine.replace( drumMachineId, "drumMachine.ck:" + c.numBeats + ":" + c.tempo + ":" + pan ) => drumMachineId;*/
-      now => timeStartDrum;
+      //find current shred ID of file in quesiton.  if -1, create a new 
+      fileIds[value - 1] => int fileId;
+      <<< "fileId", fileId >>>;
+      if(fileId == -1)
+      {
+        spork ~ addNewFile(value);
+      }
+      else
+      {
+        spork ~ removeFile(value, fileId);
+      }
     }
   }
+
 
   //change octave
   else if(cmd == "o")
@@ -160,7 +240,6 @@ while (true)
     (0.0 + value)/10000*2 => percentage;
     frequency*percentage => offset;
     frequency+offset => frequency;
-    /*o.freq() + offset => o.freq;*/
   }
 
   //play looper in separate shred so will still sound when restarting main
@@ -171,71 +250,8 @@ while (true)
     Machine.add( "/docs/chuck/theremin/micLooper.ck:" + c.numBeats * value + ":" + c.tempo + ":" + lag + ":" + pan );
   }
 
-  //check if switching song section
-  if (cmd == "-")
-  {
-    "-" => previousMsg;
 
-  }
 
-  //play the local version of the file number in question
-  if(cmd == "f")
-  { 
-    //if switching song section
-    if (previousMsg == "-")
-    {
-      value => currentSection;
-      //check to see if any other existing threads, if so, wait
-      for(0 => int i; i < fileIds.cap(); i++)
-      {
-        if(fileIds[i] > -1)
-        {
-          spork ~ replaceFile(i+1, fileIds[i]);
-          /*Machine.replace(fileIds[i], "file" + (i+1) + ".ck:" + currentSection);*/
-        }
-      }
-      " " => previousMsg;
-    }
-
-    //otherwise, just starting or stopping shred
-    else
-    {
-      //find current shred ID of file in quesiton.  if -1, create a new 
-      fileIds[value - 1] => int fileId;
-      <<< "fileId", fileId >>>;
-      if(fileId == -1)
-      {
-        <<< "adding ", value >>>;
-        spork ~ addNewFile(value);
-      }
-      else
-      {
-        <<< "removing ", value >>>;
-        spork ~ removeFile(value, fileId);
-      }
-    }
-  }
-
-  //change mode(scale) -- depends on next msg
-  if(cmd == "m")
-  {
-    "m" => previousMsg;
-  }
-
-  //change instrument
-  if(cmd == "i")
-  {
-    "i" => previousMsg;
-  }
-
-  if (cmd == "d")
-  {
-    toggle(isDelay) => isDelay;
-    if (isDelay)
-      0.6 => delay.gain;
-    else
-      0.0 => delay.gain;
-  }
 
   frequency => instr.freq;
   " " => cmd;
@@ -293,7 +309,7 @@ fun int toggle(int bool)
   else if (bool == 0)
   {
     <<< "is 1" >>>;
-   1 => bool;
+    1 => bool;
   }
   return bool;
 }

@@ -48,16 +48,8 @@ while( true )
       {
         "n" => constants.event.cmd;
         msg.which - 1 => constants.event.value;
-        <<< "which", msg.which >>>;
       }
 
-      //if -, send note off.  good for stopping long playing instruments
-      else if(msg.which == 12) 
-      {
-       "n" => constants.event.cmd;
-       0 => constants.event.value;
-      }
-      
       //up arrow increases octave
       else if(msg.which == 200) 
       {
@@ -130,15 +122,38 @@ while( true )
       {
         "d" => constants.event.cmd;
       }
-      //'r' will start rhythm track 
+
+      //'c' will set chorus
+      else if(msg.which == 46) 
+      {
+        "c" => constants.event.cmd;
+      }
+
+      //'r' will set reverb
       else if(msg.which == 19) 
       {
         "r" => constants.event.cmd;
       }
+
       //'-' will replace all shreds with 2nd verse
       else if(msg.which == 74) 
       {
         "-" => constants.event.cmd;
+      }
+      
+      //backspace 
+      else if(msg.which == 14) 
+      {
+        "bs" => constants.event.cmd;
+      }
+      //_ 
+      else if(msg.which == 12) 
+      {
+        "_" => constants.event.cmd;
+      }
+      else if(msg.which == 13) 
+      {
+        "=" => constants.event.cmd;
       }
       constants.event.broadcast();
       1::samp => now;
