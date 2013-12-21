@@ -43,11 +43,17 @@ while( true )
         funNumber + constants.scale.cap() => constants.event.value;
       }
 
-      //if between 1 and 9, send note numnber
+      //if top number keys between 1 and 9, send note numnber
       else if (msg.which >=2 && msg.which <= 11 )
       {
         "n" => constants.event.cmd;
         msg.which - 1 => constants.event.value;
+      }
+
+      //turn on/off polyphony
+      else if(msg.which == 25) 
+      {
+       "p" => constants.event.cmd;
       }
 
       //up arrow increases octave
@@ -85,24 +91,25 @@ while( true )
        2 => constants.event.value;
       }
 
-      //number keypad 1 to call file
-      else if(msg.which == 79) 
+      //number keypad 1-3 to call file
+      else if(msg.which == 79 || msg.which == 80 || msg.which == 81) 
       {
        "f" => constants.event.cmd;
-       1 => constants.event.value;
+       msg.which - 78 => constants.event.value;
       }
 
-      //number keypad 2 to call file
-      else if(msg.which == 80) 
+      //number keypad 1-3 to call file
+      else if(msg.which == 75 || msg.which == 76 || msg.which == 77) 
       {
        "f" => constants.event.cmd;
-       2 => constants.event.value;
+       msg.which - 71 => constants.event.value;
       }
-      //number keypad 3 to call file
-      else if(msg.which == 81) 
+
+      //number keypad 1-3 to call file
+      else if(msg.which == 71 || msg.which == 72 || msg.which == 73) 
       {
        "f" => constants.event.cmd;
-       3 => constants.event.value;
+       msg.which - 64 => constants.event.value;
       }
 
       //'m' will set scale/mode
@@ -154,6 +161,11 @@ while( true )
       else if(msg.which == 13) 
       {
         "=" => constants.event.cmd;
+      }
+      //right shift 
+      else if(msg.which == 54) 
+      {
+        "rs" => constants.event.cmd;
       }
       constants.event.broadcast();
       1::samp => now;

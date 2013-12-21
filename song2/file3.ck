@@ -1,25 +1,29 @@
 Std.atoi(me.arg(0)) => int section;
-NRev r;
-0.1 => r.mix;
-Rhodey instr => r => dac;
-Rhodey instr1 => r => dac;
-Rhodey instr2 =>r =>  dac.left;
-Rhodey instr3 => r => dac.right;
+StkInstrument instruments[4];
+Rhodey inst0 @=> instruments[0];
+Rhodey inst1 @=> instruments[1];
+Rhodey inst2 @=> instruments[2];
+Rhodey inst3 @=> instruments[3];
+
+for(0 => int i; i < instruments.cap(); i++)
+{
+  instruments[i] => dac;
+}
 
 .1 => float instrGain;
 2 => int startOctave;
 
 Constants c;
 
-[8,0,0,0,0,0,7,0,0,0,0,0,6,0,0,0,0,0,4,0,0,0,0,0] @=> int melody[];
-[0,15,0,15,0,15,0,15,0,15,0,15,0,12,0,12,0,12,0,11,0,11,0,0] @=> int melody1[];
-[0,0,17,0,17,0,0,0,17,0,17,0,0,0,15,0,15,0,0,0,13,0,13,0] @=> int melody2[];
-[0,0,19,0,19,0,0,0,19,0,19,0,0,0,17,0,17,0,0,0,15,0,15,0] @=> int melody3[];
+["2|8","0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"2|7","0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"2|6","0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"2|4","0"  ,"0"  ,"0"  ,"0"  ,"0"  ] @=> string melody1a[];
+["0"  ,"4|1","0"  ,"4|1","0"  ,"4|1","0"  ,"4|1","0"  ,"4|1","0"  ,"4|1","0"  ,"4|5","0"  ,"4|5","0"  ,"4|5","0"  ,"4|4","0"  ,"4|4","0"  ,"0"  ] @=> string melody1b[];
+["0"  ,"0"  ,"4|3","0"  ,"4|3","0"  ,"0"  ,"0"  ,"4|3","0"  ,"4|3","0"  ,"0"  ,"0"  ,"4|1","0"  ,"4|1","0"  ,"0"  ,"0"  ,"4|6","0"  ,"4|6","0"  ] @=> string melody1c[];
+["0"  ,"0"  ,"4|5","0"  ,"4|5","0"  ,"0"  ,"0"  ,"4|5","0"  ,"4|5","0"  ,"0"  ,"0"  ,"4|3","0"  ,"4|3","0"  ,"0"  ,"0"  ,"4|1","0"  ,"4|1","0"  ] @=> string melody1d[];
 
-[5,6,7,8,9,10,8,0,0,0,0,0,8,0,0,0,0,0,8,0,0,0,0,0] @=> int melodyb[];
-[0,0,0,0,0,0,0,0,15,0,15,0,0,0,15,0,15,0,0,0,15,0,15,0] @=> int melodyb1[];
-[0,0,0,0,0,0,0,0,17,0,17,0,0,0,17,0,17,0,0,0,17,0,17,0] @=> int melodyb2[];
-[0,0,0,0,0,0,0,0,19,0,19,0,0,0,19,0,19,0,0,0,19,0,19,0] @=> int melodyb3[];
+["2|5","2|6","2|7","3|1","3|2","3|3","2|8","0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"2|8","0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"2|8","0"  ,"0"  ,"0"  ,"0"  ,"0"  ] @=> string melody2a[];
+["0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"4|1","0"  ,"4|1","0"  ,"0"  ,"0"  ,"4|1","0"  ,"4|1","0"  ,"0"  ,"0"  ,"4|1","0"  ,"4|1","0"  ] @=> string melody2b[];
+["0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"4|3","0"  ,"4|3","0"  ,"0"  ,"0"  ,"4|3","0"  ,"4|3","0"  ,"0"  ,"0"  ,"4|3","0"  ,"4|3","0"  ] @=> string melody2c[];
+["0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"0"  ,"4|5","0"  ,"4|5","0"  ,"0"  ,"0"  ,"4|5","0"  ,"4|5","0"  ,"0"  ,"0"  ,"4|5","0"  ,"4|5","0"  ] @=> string melody2d[];
 
 
 0 => int counter; //this increments forever
@@ -33,63 +37,34 @@ while(true)
   {
     c.setKeyAndScale(c.f, c.mixolydian);
     c.populateScale();
-    if (melodyb[beat]> 0)
-    { 
-      c.getFreq(melodyb[beat], startOctave) => instr.freq;
-      instrGain => instr.noteOn;
-    }
-    if (melodyb1[beat]> 0)
-    { 
-      c.getFreq(melodyb1[beat], startOctave) => instr1.freq;
-      instrGain => instr1.noteOn;
-    }
-    if (melodyb2[beat]> 0)
-    { 
-      c.getFreq(melodyb2[beat], startOctave) => instr2.freq;
-      instrGain => instr2.noteOn;
-    }
-    if (melodyb3[beat]> 0)
-    { 
-      c.getFreq(melodyb3[beat], startOctave) => instr3.freq;
-      instrGain => instr3.noteOn;
-    }
-
+    playInstr(melody2a[beat],0);
+    playInstr(melody2b[beat],1);
+    playInstr(melody2c[beat],2);
+    playInstr(melody2d[beat],3);
   }
   else
   {
     c.setKeyAndScale(c.g, c.aeolian);
     c.populateScale();
-    if (melody[beat]> 0)
-    { 
-      c.getFreq(melody[beat], startOctave) => instr.freq;
-      instrGain => instr.noteOn;
-    }
-    if (melody1[beat]> 0)
-    { 
-      c.getFreq(melody1[beat], startOctave) => instr1.freq;
-      instrGain => instr1.noteOn;
-    }
-    if (melody2[beat]> 0)
-    { 
-      c.getFreq(melody2[beat], startOctave) => instr2.freq;
-      instrGain => instr2.noteOn;
-    }
-    if (melody3[beat]> 0)
-    { 
-      c.getFreq(melody3[beat], startOctave) => instr3.freq;
-      instrGain => instr3.noteOn;
-    }
-
-
+    playInstr(melody1a[beat],0);
+    playInstr(melody1b[beat],1);
+    playInstr(melody1c[beat],2);
+    playInstr(melody1d[beat],3);
   }
   progress();
 
-  instrGain => instr1.noteOff;
-  instrGain => instr2.noteOff;
-  instrGain => instr3.noteOff;
-
 }
 
+fun void playInstr(string note, int instr)
+{
+  if (note != "0"  )
+  { 
+    Std.atoi(note.substring(0,1))=> int startOctave;
+    Std.atoi(note.substring(2)) => int stepNumber;
+    c.getFreq(stepNumber, startOctave) => instruments[instr].freq;
+    instrGain => instruments[instr].noteOn;
+  }
+}
 fun void updateBeat()
 {
   counter % c.numBeats => beat;  

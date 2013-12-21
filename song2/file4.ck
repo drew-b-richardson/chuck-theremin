@@ -9,6 +9,9 @@ gen.coefs( [ 2.2, .3, 0, 0.2, 1.2, .34, .2] );
 master.gain(.1);
 saw.freq(60);
 
+Constants c;
+c.populateScale();
+
 fun void filtMod()
 {
     while( true )
@@ -23,8 +26,10 @@ fun void filtMod()
 spork~ filtMod();
 while( true )
 {
+ Math.random2(1,c.scale.cap()) => int stepNum;
     filtEnv.keyOn(1);
-    saw.freq(Math.random2f(34,68));
+   c.getFreq(stepNum, 5) => saw.freq;
+      <<< "now", stepNum, "freq", saw.freq() >>>;
     2::second => now;
 }
 

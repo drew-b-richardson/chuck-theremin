@@ -3,19 +3,26 @@ Std.atoi(me.arg(0)) => int section;
 Gain g =>  dac;
 0.3 => g.gain;
 
-Constants constants;
+Constants c;
 
-SndBuf kick => g;
+SndBuf kick;
 me.dir() + "/docs/chuck/theremin/audio/kick_05.wav" =>  kick.read;
-kick.samples() => kick.pos; 
 
-SndBuf hihat => g;
+SndBuf hihat;
 me.dir() + "/docs/chuck/theremin/audio/hihat_01.wav" =>  hihat.read;
-hihat.samples() => hihat.pos; 
 0.3 => hihat.gain;
 
-[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0] @=> int kicks[];
-[0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,1,0] @=> int hihats[];
+SndBuf bufs[2];
+kick @=> bufs[0];
+hihat @=> bufs[1];
+for(0 => int i; i < bufs.cap(); i++)
+{
+  bufs[i] => g;
+  bufs[i].samples() => bufs[i].pos; 
+}
+
+[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0] @=> int kicks1[];
+[0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,1,0] @=> int hihats1[];
 
 [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0] @=> int kicks2[];
 
@@ -27,48 +34,39 @@ while(true)
 {
   updateBeat();
 
-  if (hihats[beat])
-  {
-    0  => hihat.pos;
-  }
+  playBuffer(hihats1[beat], 1);
 
   if (section == 2)
   {
-    if (kicks2[beat])
-    {
-      0  => kick.pos;
-    }
+    playBuffer(kicks2[beat], 0);
   }
   else
   {
-    if (kicks[beat])
-    {
-      0  => kick.pos;
-    }
+    playBuffer(kicks1[beat], 0);
   }
 
   progress();
 }
 
-fun int playSndBuf(int doPlay, SndBuf buffer)
+fun void playBuffer(int doPlay, int bufNumber)
 {
   if (doPlay)
   {
-    0  => buffer.pos;
+    0  => bufs[bufNumber].pos;
   }
-}
 
+}
 fun void updateBeat()
 {
-  counter % constants.numBeats => beat;  
+  counter % c.numBeats => beat;  
 }
 
 fun void progress()
 {
   counter++;
-  if(beat == constants.numBeats -1)
+  if(beat == c.numBeats -1)
     measure++;
 
-  constants.tempo::second => now; 
+  c.tempo::second => now; 
 }
 

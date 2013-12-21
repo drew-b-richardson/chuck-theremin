@@ -75,7 +75,7 @@ void loop()
   writeVert();
   writeHoriz();
   writeShakeX();
-  writeRoll();
+  //writeRoll();
 
   delay(50); 
 }
