@@ -7,10 +7,11 @@ Constants c;
 
 SndBuf kick;
 me.dir() + "/docs/chuck/theremin/audio/kick_05.wav" =>  kick.read;
+0.5 => kick.gain;
 
 SndBuf hihat;
 me.dir() + "/docs/chuck/theremin/audio/hihat_01.wav" =>  hihat.read;
-0.3 => hihat.gain;
+0.1 => hihat.gain;
 
 SndBuf bufs[2];
 kick @=> bufs[0];

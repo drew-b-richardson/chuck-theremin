@@ -25,16 +25,15 @@ StkInstrument inst[12];
 // make each instrument a different type
 Flute inst0 @=> inst[0];
 Rhodey inst1 @=> inst[1];
-Clarinet inst2 @=> inst[2];
-BlowBotl inst3 @=> inst[3];
-BandedWG inst4 @=> inst[4];
-BlowHole inst5 @=> inst[5];
-Bowed inst6 @=> inst[6];
-Brass inst7 @=> inst[7];
-Mandolin inst8 @=> inst[8];
+Moog inst2 @=> inst[2];
+BeeThree inst3 @=> inst[3];
+Wurley inst4 @=> inst[4];
+FMVoices inst5 @=> inst[5];
+TubeBell inst6 @=> inst[6];
+PercFlut inst7 @=> inst[7];
+StifKarp inst8 @=> inst[8];
 ModalBar inst9 @=> inst[9];
-Moog inst10 @=> inst[10];
-Saxofony inst11 @=> inst[11];
+VoicForm inst11 @=> inst[11];
 
 StkInstrument polyInst[4];
 0 => int currentInst;
@@ -46,7 +45,7 @@ inst[0] @=> StkInstrument instr;
 //main instrument
 instr =>  NRev rev => Chorus chorus => Gain g => LevelMeter meter => Pan2 p =>    dac;
 0.2 => chorus.modDepth;
-0.2 => float instrGain;
+0.1 => float instrGain;
 0.2 => rev.mix;
 0.0 => chorus.mix;
 0 => p.pan;
@@ -372,7 +371,7 @@ fun void playNote()
   /*polyInst[0] @=> i;*/
   polyInst[spot] => rev;
   frequency => polyInst[spot].freq;
-  0.1 => polyInst[spot].noteOn; 
+  instrGain/2.5 => polyInst[spot].noteOn; 
   currentInstNum++;
   while(isPolyphonic)
   {
@@ -393,15 +392,28 @@ fun void getPreset(int num)
   if (num == 1)
   {
     changeInstrument(0);
-    0.3 => rev.mix;
+    0.2 => rev.mix;
     0 => chorus.mix;
-    0.3 => delay.gain;
+    0.5 => delay.gain;
+    0.2 => instrGain;
+    5 => startOctave;
   }
   else if (num == 2)
   {
     changeInstrument(1);
-    0.5 => rev.mix;
-    0.7 => chorus.mix;
+    0.2 => rev.mix;
+    0.2 => chorus.mix;
     0.3 => delay.gain;
+    0.4  => instrGain;
+    6 => startOctave;
+  }
+  else if (num == 3)
+  {
+    changeInstrument(2);
+    0.0 => rev.mix;
+    0.0 => chorus.mix;
+    0.3 => delay.gain;
+    0.3 => instrGain;
+    2 => startOctave;
   }
 }

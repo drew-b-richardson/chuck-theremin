@@ -6,7 +6,7 @@ Step s => ADSR filtEnv => blackhole;
 filtEnv.set(2000::ms, 2000::ms, 0, 1::ms);
 gen.coefs( [ 2.2, .3, 0, 0.2, 1.2, .34, .2] );
 
-master.gain(.1);
+master.gain(.05);
 saw.freq(60);
 
 Constants c;

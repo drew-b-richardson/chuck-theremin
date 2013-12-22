@@ -3,7 +3,7 @@ Std.atoi(me.arg(0)) => int section;
 TriOsc osc => ADSR env =>  dac;
 env.set(0.01 :: second, 0.05 :: second, 0.3,  0.7 :: second);
 
-.3 => osc.gain;
+.2 => osc.gain;
 2 => int startOctave;
 
 Constants c;

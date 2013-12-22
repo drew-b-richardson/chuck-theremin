@@ -2,6 +2,7 @@ Constants c;
 adc => LiSa lisa => Pan2 p => dac;
 <<< "enter looper" >>>;
 
+0.5 => lisa.gain;
 Std.atoi(me.arg(0)) => int numBeats;
 Std.atof(me.arg(1)) => float tempo;
 Std.atof(me.arg(2)) => float lag;
