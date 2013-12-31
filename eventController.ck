@@ -39,6 +39,12 @@ StkInstrument polyInst[4];
 0 => int currentInst;
 0 => int currentInstNum;
 
+Loop loops[2];
+Loop loop0 @=> loops[0];
+Loop loop1 @=> loops[1];
+-1 => int loopToPlay; //which looper we're controlling.  if < 0, we're controlling main instrument
+
+Samples samples;
 
 inst[0] @=> StkInstrument instr;
 
@@ -67,7 +73,7 @@ c.tempo::second * c.numBeatsPerMeasure => delay.max => delay.delay;
 //vars to make LiSa start at beginning of next measure
 //NOTE:  ONCE THIS SHRED IS REMOVED, MEASURES ARE NO LONGER ACCURATE.  STARTTIME IS FROM START OF VM, NOT SHRED
 1 => int playFromMeasure;
-200 => int lag;
+220 => int lag;
 c.numBeats * c.tempo::second => dur durPerMeasure;
 time timeStartDrum;
 
@@ -117,7 +123,7 @@ while (true)
   }
 
   //for all keys that require a following action:
-  if(cmd == "m" || cmd == "i" || cmd == "r" || cmd == "d" || cmd == "c" || cmd == "-" || cmd == "=" || cmd == "_" || cmd == "rs")
+  if(cmd == "p" ||cmd == "g" || cmd == "s" ||cmd == "l" || cmd == "i" || cmd == "r" || cmd == "d" || cmd == "c" || cmd == "-" || cmd == "=" || cmd == "_" || cmd == "rs")
   {
     cmd => previousMsg;
   }
@@ -130,6 +136,20 @@ while (true)
     {
       getPreset(value);
     }
+
+    //select a loop to control.  hit 0 to control main instrument
+    else if (previousMsg == "l")
+    {
+      if (value == 10)
+      {
+        -1 => loopToPlay; 
+      }
+      else
+        value - 1 => loopToPlay;
+
+      <<< "loopToPlay", loopToPlay >>>;
+    }
+
     //change instrument
     else if (previousMsg == "i")
     {
@@ -139,27 +159,33 @@ while (true)
     //change reverb
     else if (previousMsg == "r")
     {
-      (value - 1)/10.0 => rev.mix;
+      if (loopToPlay >= 0)
+        loops[loopToPlay].setReverb((value - 1)/10.0);
+      else
+        (value - 1)/10.0 => rev.mix;
     }
 
     //change delay
     else if (previousMsg == "d")
     {
-      (value - 1)/10.0 => delay.gain;
+      if (loopToPlay >= 0)
+        loops[loopToPlay].setDelay((value - 1)/10.0);
+      else
+        (value - 1)/10.0 => delay.gain;
     }
 
     //up half step
     else if (previousMsg == "=")
     {
       <<< "here1" >>>;
-        Std.mtof(c.fullScale[value-1] + startOctave*12 + 1) => frequency;
+      Std.mtof(c.fullScale[value-1] + startOctave*12 + 1) => frequency;
     }
 
     //down half step
     else if (previousMsg == "_")
     {
       <<< "here2" >>>;
-        Std.mtof(c.fullScale[value-1] + startOctave*12 - 1) => frequency;
+      Std.mtof(c.fullScale[value-1] + startOctave*12 - 1) => frequency;
     }
 
     //change chorus
@@ -169,10 +195,25 @@ while (true)
     }
 
     //change scale
-    else if (previousMsg == "m")
+    else if (previousMsg == "s")
     {
       c.setScale(c.getScale(value));
       c.populateScale();  
+    }
+
+    //loop gain
+    else if(previousMsg == "g")
+    {
+      if (loopToPlay >= 0)
+      {
+        spork ~ setLoopGain();
+      }
+    }
+    //instr pan
+    else if(previousMsg == "p")
+    {
+      if (loopToPlay >= 0)
+        loops[loopToPlay].setPan((value - 5)*2/10.0);
     }
 
     //if there were no previous messages, just play note
@@ -206,7 +247,7 @@ while (true)
     }
     else
     {
-    instrGain => instr.noteOff;
+      instrGain => instr.noteOff;
     }
   }
 
@@ -242,19 +283,20 @@ while (true)
     }
   }
 
+  //start recording current loop position if right arrow pressed
+  else if(cmd == "ra")
+  {
+    spork ~ startLooper(loopToPlay);
+  }
+  //stop playing current loop if left arrow
+  else if(cmd == "la")
+  {
+    spork ~ stopLoop();
+  }
 
   //toggle polyphony on/off
-  else if(cmd == "p")
+  else if(cmd == "m")
   {
-    <<< "toggling" >>>;
-    /*if (isPolyphonic)*/
-    /*{*/
-
-      /*for(0 => int i; i < polyInst.cap(); i++)*/
-      /*{*/
-        /*inst[currentInst] @=> polyInst[i];  */
-      /*}*/
-    /*}*/
     toggle(isPolyphonic) => isPolyphonic;
   }
 
@@ -264,12 +306,15 @@ while (true)
     startOctave + value => startOctave;
   }
 
-  //instr pan
-  else if(cmd == "h")
-  {
-    value/100.0 => p.pan;
-    <<< "pan", p.pan() >>>;
-  }
+
+
+
+  /*//instr pan*/
+  /*else if(cmd == "h")*/
+  /*{*/
+  /*value/100.0 => p.pan;*/
+  /*<<< "pan", p.pan() >>>;*/
+  /*}*/
 
   //instr gain
   else if(cmd == "v")
@@ -286,12 +331,12 @@ while (true)
   }
 
   //play looper in separate shred so will still sound when restarting main
-  else if(cmd == "l")
-  {
-    <<< "looper ready" >>>;
-    waitTillNextMeasure();
-    Machine.add( "/docs/chuck/theremin/micLooper.ck:" + c.numBeats * value + ":" + c.tempo + ":" + lag + ":" + pan );
-  }
+  /*else if(cmd == "l")*/
+  /*{*/
+  /*<<< "looper ready" >>>;*/
+  /*waitTillNextMeasure();*/
+  /*Machine.add( "/docs/chuck/theremin/micLooper.ck:" + c.numBeats * value + ":" + c.tempo + ":" + lag + ":" + pan );*/
+  /*}*/
 
 
 
@@ -300,6 +345,25 @@ while (true)
   " " => cmd;
   1::samp => now;
 
+}
+
+fun void startLooper(int value)
+{
+  <<< "looper ready" >>>;
+  waitTillNextMeasure();
+  loops[value].record(lag);
+}
+
+fun void stopLoop()
+{
+  waitTillNextMeasure();
+  loops[loopToPlay].stopPlaying();
+}
+
+fun void setLoopGain()
+{
+  waitTillNextMeasure();
+  loops[loopToPlay].setGain((value - 1)/10.0);
 }
 
 fun void addNewFile(int value)
@@ -381,11 +445,11 @@ fun void playNote()
 
 fun void changeInstrument(int num)
 {
-      instrGain => instr.noteOff;
-      instr =< rev;
-      inst[num] @=> instr;  
-      instr =>  rev ;
-      num => currentInst;
+  instrGain => instr.noteOff;
+  instr =< rev;
+  inst[num] @=> instr;  
+  instr =>  rev ;
+  num => currentInst;
 }
 fun void getPreset(int num)
 {
@@ -395,7 +459,7 @@ fun void getPreset(int num)
     0.2 => rev.mix;
     0 => chorus.mix;
     0.5 => delay.gain;
-    0.2 => instrGain;
+    0.17 => instrGain;
     5 => startOctave;
   }
   else if (num == 2)
@@ -413,7 +477,16 @@ fun void getPreset(int num)
     0.0 => rev.mix;
     0.0 => chorus.mix;
     0.3 => delay.gain;
-    0.3 => instrGain;
+    0.7 => instrGain;
+    2 => startOctave;
+  }
+  else if (num == 4)
+  {
+    changeInstrument(4);
+    0.1 => rev.mix;
+    0.0 => chorus.mix;
+    0.0 => delay.gain;
+    0.8 => instrGain;
     2 => startOctave;
   }
 }

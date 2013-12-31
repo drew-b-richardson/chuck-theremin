@@ -112,10 +112,15 @@ while( true )
        msg.which - 64 => constants.event.value;
       }
 
-      //'m' will set scale/mode
+      //'m' 
       else if(msg.which == 50) 
       {
         "m" => constants.event.cmd;
+      }
+
+      else if(msg.which == 31) 
+      {
+        "s" => constants.event.cmd;
       }
 
       //'i' will set scale/mode
@@ -130,6 +135,11 @@ while( true )
         "d" => constants.event.cmd;
       }
 
+      //'g' will set chorus
+      else if(msg.which == 34) 
+      {
+        "g" => constants.event.cmd;
+      }
       //'c' will set chorus
       else if(msg.which == 46) 
       {
@@ -166,6 +176,16 @@ while( true )
       else if(msg.which == 54) 
       {
         "rs" => constants.event.cmd;
+      }
+      //right arrow 
+      else if(msg.which == 205) 
+      {
+        "ra" => constants.event.cmd;
+      }
+      //left arrow 
+      else if(msg.which == 203) 
+      {
+        "la" => constants.event.cmd;
       }
       constants.event.broadcast();
       1::samp => now;

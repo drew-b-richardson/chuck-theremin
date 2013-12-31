@@ -3,4 +3,7 @@ Machine.add("/docs/chuck/theremin/constants.ck");
 Machine.add("setup.ck");
 Machine.add("/docs/chuck/theremin/arduinoBroadcaster.ck");
 Machine.add("/docs/chuck/theremin/keyboardBroadcaster.ck");
+Machine.add("/docs/chuck/theremin/micLooper.ck");
 Machine.add("/docs/chuck/theremin/eventController.ck");
+/*Machine.add("rec-l.ck");*/
+/*Machine.add("rec-r.ck");*/
