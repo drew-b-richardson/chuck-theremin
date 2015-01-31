@@ -1,5 +1,6 @@
 public class Samples
 {
+  Gain g => Pan2 p => dac;
 
   SndBuf one;
   me.dir() + "/docs/chuck/theremin/audio/AbdicationAddress.wav" =>  one.read;

@@ -1,7 +1,8 @@
 
 //set initial key and scale values
 Constants c;
-c.setKeyAndScale(c.g, c.aeolian);
+/*c.setKeyAndScale(c.g, c.aeolian);*/
+c.setKeyAndScale(c.a, c.minpent);
 
 // basic pattern is 4 measures of 6/8 
 240.0 => c.bpm;

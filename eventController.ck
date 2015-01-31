@@ -1,3 +1,6 @@
+//to control looper:  "l" followed by number in top numpad (1 is looper 0).
+//right arros to start recording new loop.  left arrow to stop playback of loop
+
 // Dave's Level Meter (free to a good home)
 class LevelMeter extends Chugen {
     0 => float max_level; 
@@ -45,6 +48,7 @@ Loop loop1 @=> loops[1];
 -1 => int loopToPlay; //which looper we're controlling.  if < 0, we're controlling main instrument
 
 Samples samples;
+0 => int playSamples; //if true, top numpad plays samples instead of notes
 
 inst[0] @=> StkInstrument instr;
 
@@ -177,14 +181,14 @@ while (true)
     //up half step
     else if (previousMsg == "=")
     {
-      <<< "here1" >>>;
+      /*<<< "here1" >>>;*/
       Std.mtof(c.fullScale[value-1] + startOctave*12 + 1) => frequency;
     }
 
     //down half step
     else if (previousMsg == "_")
     {
-      <<< "here2" >>>;
+      /*<<< "here2" >>>;*/
       Std.mtof(c.fullScale[value-1] + startOctave*12 - 1) => frequency;
     }
 
@@ -214,6 +218,13 @@ while (true)
     {
       if (loopToPlay >= 0)
         loops[loopToPlay].setPan((value - 5)*2/10.0);
+    }
+
+    //play sample if set to samples
+    else if (playSamples)
+    {
+      /*<<< "play sample #", value >>>;*/
+      samples.playSample(value - 1);
     }
 
     //if there were no previous messages, just play note
@@ -254,7 +265,7 @@ while (true)
   //numpad numbers 1-9
   else if(cmd == "f")
   { 
-    <<< "num", value >>>;
+    /*<<< "num", value >>>;*/
     //if switching song section
     if (previousMsg == "-")
     {
@@ -271,7 +282,7 @@ while (true)
     {
       //find current shred ID of file in quesiton.  if -1, create a new 
       fileIds[value - 1] => int fileId;
-      <<< "fileId", fileId >>>;
+      /*<<< "fileId", fileId >>>;*/
       if(fileId == -1)
       {
         spork ~ addNewFile(value);
@@ -306,6 +317,12 @@ while (true)
     startOctave + value => startOctave;
   }
 
+  //toggle playing of samples
+  else if(cmd == "rc")
+  {
+    toggle(playSamples) => playSamples;
+    /*<<< "playSamples", playSamples >>>;*/
+  }
 
 
 
@@ -349,7 +366,7 @@ while (true)
 
 fun void startLooper(int value)
 {
-  <<< "looper ready" >>>;
+  <<< "looper ready", value >>>;
   waitTillNextMeasure();
   loops[value].record(lag);
 }
@@ -429,7 +446,7 @@ fun void playNote()
   BlowBotl inst3 @=> inst[3];
 
   currentInstNum % polyInst.cap() => int spot;
-  <<< "spot", spot >>>;
+  /*<<< "spot", spot >>>;*/
   polyInst[spot] =< rev;
   inst[currentInst] @=> polyInst[spot];
   /*polyInst[0] @=> i;*/

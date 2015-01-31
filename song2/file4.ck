@@ -30,7 +30,7 @@ while( true )
  Math.random2(1,c.scale.cap()) => int stepNum;
     filtEnv.keyOn(1);
    c.getFreq(stepNum, 5) => saw.freq;
-      <<< "now", stepNum, "freq", saw.freq() >>>;
+      /*<<< "now", stepNum, "freq", saw.freq() >>>;*/
     2::second => now;
 }
 

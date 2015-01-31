@@ -1,7 +1,7 @@
 
 //set initial key and scale values
 Constants c;
-c.d =>   c.key;
+c.a =>   c.key;
 c.minpent @=> c.scale;
 
 80.0 => c.bpm;

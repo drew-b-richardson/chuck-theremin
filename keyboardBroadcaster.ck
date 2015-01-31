@@ -14,7 +14,7 @@ HidMsg msg;
 // open keyboard; or exit if fail to open
 if( !hi.openKeyboard( device ) ) me.exit();
 // print a message!
-<<< "keyboard '" + hi.name() + "' ready", "" >>>;
+/*<<< "keyboard '" + hi.name() + "' ready", "" >>>;*/
 
 // infinite event loop
 while( true )
@@ -29,7 +29,7 @@ while( true )
     if( msg.isButtonDown() )
     {
 
-   <<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;
+   /*<<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;*/
 
       //function keys for octave above notes
       if (msg.which >=59 && msg.which <= 68 || (msg.which == 87 || msg.which == 88 ))
@@ -186,6 +186,11 @@ while( true )
       else if(msg.which == 203) 
       {
         "la" => constants.event.cmd;
+      }
+      //right control
+      else if(msg.which == 157) 
+      {
+        "rc" => constants.event.cmd;
       }
       constants.event.broadcast();
       1::samp => now;
