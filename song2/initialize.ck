@@ -6,5 +6,5 @@ Machine.add("/docs/chuck/theremin/keyboardBroadcaster.ck");
 Machine.add("/docs/chuck/theremin/micLooper.ck");
 Machine.add("samples.ck");
 Machine.add("/docs/chuck/theremin/eventController.ck");
-Machine.add("rec-l.ck");
-Machine.add("rec-r.ck");
+/*Machine.add("rec-l.ck");*/
+/*Machine.add("rec-r.ck");*/
