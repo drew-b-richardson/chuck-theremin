@@ -7,13 +7,13 @@ public  class Constants
   [0,2,4,5,7,9,10,12] @=>  int mixolydian[];
   [0,2,3,5,7,8,10,12] @=>  int aeolian[];
   [0,1,3,5,6,8,10,12] @=>  int locrian[];
-  
+
   [0,3,5,6,7,10,12] @=> int minpent[];
   [0,2,4,7,9,12] @=>  int majpent[];
 
   [0,2,3,5,7,8,11,12] @=>   int harmminor[];
   [0,2,3,5,7,9,11,12] @=>   int melodminor[];
-  
+
   [0,2,3,6,7,8,11,12] @=>   int hungarian[];
   [0,1,4,5,6,8,11,12] @=>   int persian[];
   [0,1,4,5,7,8,11,12] @=>   int byzantine[];
@@ -21,7 +21,7 @@ public  class Constants
   [0,1,3,5,7,8,10,12] @=>   int indian[];
   [0,2,3,6,7,8,11,12] @=>   int gypsy[];
   [0,1,4,5,7,8,10,12] @=>   int ahava[];
-  
+
 
   0 => int c;
   1 =>  int cs;
@@ -122,10 +122,9 @@ public  class Constants
   {
      return Std.mtof(fullScale[midiNum -1] + startOctave*12);
   }
-    
+
 
 
 }
 
 new CustomEvent @=> Constants.event;
-

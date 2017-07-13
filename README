@@ -1,4 +1,8 @@
-1. start server (F3)
-2. shred Constants so that all files will have access to it
-3. shred simpleTheremin.  this calls all others excepte 'repeats'
+1. start server in cmd window: chuck --loop
+2. new cmd window: cd c:\git\chuck-theremin\song1
+3. shred song: chuck + initialize.ck
 
+instructions:
+1-0, func keys  notes
+backspace       stop
+p               turn on/off polyphony
