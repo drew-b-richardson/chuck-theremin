@@ -29,166 +29,149 @@ while( true )
     if( msg.isButtonDown() )
     {
 
-   /*<<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;*/
+      <<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;
 
       //function keys for octave above notes
-      if (msg.which >=59 && msg.which <= 68 || (msg.which == 87 || msg.which == 88 ))
+      if (msg.key >=58 && msg.key <= 69)
       {
-        msg.which - 59 => int funNumber; 
-        if (msg.which == 87 || msg.which == 88)
-        {
-         msg.which - 85 + constants.scale.cap() => funNumber; 
-        }
+        msg.key - 58 => int funNumber;
         "n" => constants.event.cmd;
         funNumber + constants.scale.cap() => constants.event.value;
       }
 
       //if top number keys between 1 and 9, send note numnber
-      else if (msg.which >=2 && msg.which <= 11 )
+      else if (msg.key >=30 && msg.key <= 39 )
       {
         "n" => constants.event.cmd;
-        msg.which - 1 => constants.event.value;
+        msg.key - 29 => constants.event.value;
       }
 
-      //turn on/off polyphony
-      else if(msg.which == 25) 
+      //set pan level
+      else if(msg.key == 19)
       {
        "p" => constants.event.cmd;
       }
 
       //up arrow increases octave
-      else if(msg.which == 200) 
+      else if(msg.key == 82)
       {
        "o" => constants.event.cmd;
        1 => constants.event.value;
       }
 
-      //up arrow increases octave
-      else if(msg.which == 208) 
+      //down arrow decreases octave
+      else if(msg.key == 81)
       {
        "o" => constants.event.cmd;
        -1 => constants.event.value;
       }
 
      //b starts drum machine
-      else if(msg.which == 48) 
-      {
-       "b" => constants.event.cmd;
-       0 => constants.event.value;
-      }
+      // else if(msg.key == 5)
+      // {
+      //  "b" => constants.event.cmd;
+      //  0 => constants.event.value;
+      // }
 
      //b starts beat
-      else if(msg.which == 48) 
-      {
-       "d" => constants.event.cmd;
-       0 => constants.event.value;
-      }
+      // else if(msg.which == 48)
+      // {
+      //  "d" => constants.event.cmd;
+      //  0 => constants.event.value;
+      // }
 
       //l starts looper
-      else if(msg.which == 38) 
+      else if(msg.key == 15)
       {
        "l" => constants.event.cmd;
        2 => constants.event.value;
       }
 
-      //number keypad 1-3 to call file
-      else if(msg.which == 79 || msg.which == 80 || msg.which == 81) 
+      else if(msg.key >= 89 && msg.key <= 97)
       {
        "f" => constants.event.cmd;
-       msg.which - 78 => constants.event.value;
+       msg.key - 88 => constants.event.value;
       }
 
-      //number keypad 1-3 to call file
-      else if(msg.which == 75 || msg.which == 76 || msg.which == 77) 
-      {
-       "f" => constants.event.cmd;
-       msg.which - 71 => constants.event.value;
-      }
-
-      //number keypad 1-3 to call file
-      else if(msg.which == 71 || msg.which == 72 || msg.which == 73) 
-      {
-       "f" => constants.event.cmd;
-       msg.which - 64 => constants.event.value;
-      }
-
-      //'m' 
-      else if(msg.which == 50) 
+      // m to turn on/off multinote poylphony
+      else if(msg.key == 16)
       {
         "m" => constants.event.cmd;
       }
 
-      else if(msg.which == 31) 
+      //s to change scale/mode
+      else if(msg.key == 22)
       {
         "s" => constants.event.cmd;
       }
 
-      //'i' will set scale/mode
-      else if(msg.which == 23) 
+      //'i' to change instrument
+      else if(msg.key == 12)
       {
         "i" => constants.event.cmd;
       }
 
-      //'d' will set delay 
-      else if(msg.which == 32) 
+      //'d' will set delay
+      else if(msg.key == 7)
       {
         "d" => constants.event.cmd;
       }
 
-      //'g' will set chorus
-      else if(msg.which == 34) 
+      //'g' set loop gain
+      else if(msg.key == 10)
       {
         "g" => constants.event.cmd;
       }
+
       //'c' will set chorus
-      else if(msg.which == 46) 
+      else if(msg.key == 6)
       {
         "c" => constants.event.cmd;
       }
 
       //'r' will set reverb
-      else if(msg.which == 19) 
+      else if(msg.key == 21)
       {
         "r" => constants.event.cmd;
       }
 
       //'-' will replace all shreds with 2nd verse
-      else if(msg.which == 74) 
+      else if(msg.key == 86)
       {
         "-" => constants.event.cmd;
       }
-      
-      //backspace 
-      else if(msg.which == 14) 
+
+      //backspace to stop sound
+      else if(msg.key == 42)
       {
         "bs" => constants.event.cmd;
       }
-      //_ 
-      else if(msg.which == 12) 
+      //- on top row
+      else if(msg.key == 45)
       {
         "_" => constants.event.cmd;
       }
-      else if(msg.which == 13) 
+      else if(msg.key == 46)
       {
         "=" => constants.event.cmd;
       }
-      //right shift 
-      else if(msg.which == 54) 
+      //right shift
+      else if(msg.key == 229)
       {
         "rs" => constants.event.cmd;
       }
-      //right arrow 
-      else if(msg.which == 205) 
+      //right arrow
+      else if(msg.which == 205)
       {
         "ra" => constants.event.cmd;
       }
-      //left arrow 
-      else if(msg.which == 203) 
+      //left arrow
+      else if(msg.key == 80)
       {
         "la" => constants.event.cmd;
       }
       //right control
-      else if(msg.which == 157) 
+      else if(msg.which == 157)
       {
         "rc" => constants.event.cmd;
       }
@@ -197,4 +180,3 @@ while( true )
     }
   }
 }
-
