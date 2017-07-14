@@ -1,8 +1,20 @@
 1. start server in cmd window: chuck --loop
 2. new cmd window: cd c:\git\chuck-theremin\song1
 3. shred song: chuck + initialize.ck
+4. stop server: chuck --kill
 
 instructions:
 1-0, func keys  notes
 backspace       stop
-p               turn on/off polyphony
+-,+             raise or lower next note by semitone
+up, down arrow  raise or lower octave
+r + 0-9         set reverb Level
+d + 0-9         set delay level -
+c + 0-9         set chorus level
+p + 0-9         set pan -
+i + 0-9         set instrument
+s + 0-9         set scale form
+m               turn on/off multinote polyphony
+numpad          start external file -
+r-ctrl          enter sample mode.  use 1 or 2 to play samples.  ctrl again to exit. (how to stop?)
+r-shft + 1-5    call preset 1-5

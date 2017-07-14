@@ -1,8 +1,11 @@
-Machine.add("/git/chuck-theremin/event.ck");
-Machine.add("/git/chuck-theremin/constants.ck");
-Machine.add("/git/chuck-theremin/song1/setup.ck");
+"/git/chuck-theremin/" => string PATH;
+"song1/" => string SONG;
+
+Machine.add(PATH + "event.ck");
+Machine.add(PATH + "constants.ck");
+Machine.add(PATH + SONG + "setup.ck");
 // Machine.add("/git/chuck-theremin/arduinoBroadcaster.ck");
-Machine.add("/git/chuck-theremin/keyboardBroadcaster.ck");
-Machine.add("/git/chuck-theremin/micLooper.ck");
-Machine.add("/git/chuck-theremin/song1/samples.ck");
-Machine.add("/git/chuck-theremin/eventController.ck");
+Machine.add(PATH + "keyboardBroadcaster.ck");
+Machine.add(PATH + "micLooper.ck");
+Machine.add(PATH + SONG + "samples.ck");
+Machine.add(PATH + "eventController.ck");

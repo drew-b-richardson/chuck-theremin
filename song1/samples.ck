@@ -1,13 +1,15 @@
 public class Samples
 {
+  "/git/chuck-theremin/" => string PATH;
+
   Gain g => Pan2 p => dac;
 
   SndBuf one;
-  "/git/chuck-theremin/audio/AbdicationAddress.wav" =>  one.read;
+  PATH + "audio/AbdicationAddress.wav" =>  one.read;
   0.5 => one.gain;
 
   SndBuf two;
-  "/git/chuck-theremin/audio/DemConvention.wav" =>  two.read;
+  PATH + "audio/DemConvention.wav" =>  two.read;
   0.1 => two.gain;
 
   SndBuf bufs[2];
