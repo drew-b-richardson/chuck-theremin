@@ -36,6 +36,12 @@ public  class Constants
   10 =>  int as;
   11 =>  int b;
 
+  58 => int F1;
+  69 => int F12;
+  30 => int NUM_1;
+  39 => int NUM_0;
+  42 => int BACK_SPACE;
+
  static  int numBeatsPerMeasure;
  static int numMeasures;
  static int numBeats;

@@ -3,18 +3,18 @@
 
 // Dave's Level Meter (free to a good home)
 class LevelMeter extends Chugen {
-    0 => float max_level; 
+    0 => float max_level;
 
     fun void resetMax()
     {
       0 => max_level;
     }
-    
+
     fun float tick(float in) {
        Math.max(max_level, in) => max_level;
        return in;
     }
-    
+
     fun float max() {
         return max_level;
     }
@@ -110,259 +110,319 @@ float curMeasure; //current measure after start of drums as float
 float measureLeft;  //fraction of a measure until next measure starts
 dur tillNextMeasure;//time until next measure starts
 
+// Hid object
+Hid hi;
+// message to convey data from Hid device
+HidMsg msg;
+
+// device number: which keyboard to open
+0 => int device;
+
+// open keyboard; or exit if fail to open
+if( !hi.openKeyboard( device ) ) me.exit();
+// print a message!
+/*<<< "keyboard '" + hi.name() + "' ready", "" >>>;*/
+
+// infinite event loop
+while( true )
+{
+  // wait for event
+  hi => now;
+
+  c.populateScale();
+  // get message
+  while( hi.recv( msg ) )
+  {
+    // filter out button down events
+    if( msg.isButtonDown() )
+    {
+
+      <<< "down:", msg.which, "(which)", msg.key, "(usb key)", msg.ascii, "(ascii)" >>>;
+
+      //function keys for octave above notes
+      if (msg.key >=c.F1 && msg.key <= c.F12)
+      {
+        play(msg.key - c.F1 + c.scale.cap());  //sends step of scale + octave: 7-14
+      }
+      //top keys 1-0
+      if (msg.key >=c.NUM_1 && msg.key <= c.NUM_0)
+      {
+        play(msg.key - c.NUM_1); //sends step of scale, 0-7
+      }
+
+      //turn off sound
+      if (msg.key == c.BACK_SPACE) {
+        instrGain => instr.noteOff;
+      }
+
+    }
+  }
+}
+
+fun void play(int scaleStep)
+{
+  Std.mtof(c.fullScale[scaleStep] + startOctave*12) => frequency;
+  <<< scaleStep, frequency >>>;
+  instrGain => instr.noteOn;
+  frequency => instr.freq;
+  // " " => cmd;
+  1::samp => now;
+}
+
+
 
 //receive values
-while (true)
-{
-  c.event => now;
-  c.event.cmd => cmd;
-  c.event.value => value;
-
-  //if starts distorting, cut back on reverb
-  if(meter.max() > 0.9)
-  {
-    <<< "danger" >>>;
-    rev.mix() - 0.2 => rev.mix;
-    meter.resetMax();
-  }
-
-  //for all keys that require a following action:
-  if(cmd == "p" ||cmd == "g" || cmd == "s" ||cmd == "l" || cmd == "i" || cmd == "r" || cmd == "d" || cmd == "c" || cmd == "-" || cmd == "=" || cmd == "_" || cmd == "rs")
-  {
-    cmd => previousMsg;
-  }
-
-  //top number keys and function keys
-  if (cmd == "n")
-  {
-    //change preset
-    if (previousMsg == "rs")
-    {
-      getPreset(value);
-    }
-
-    //select a loop to control.  hit 0 to control main instrument
-    else if (previousMsg == "l")
-    {
-      if (value == 10)
-      {
-        -1 => loopToPlay; 
-      }
-      else
-        value - 1 => loopToPlay;
-
-      <<< "loopToPlay", loopToPlay >>>;
-    }
-
-    //change instrument
-    else if (previousMsg == "i")
-    {
-      changeInstrument(value -1);
-    }
-
-    //change reverb
-    else if (previousMsg == "r")
-    {
-      if (loopToPlay >= 0)
-        loops[loopToPlay].setReverb((value - 1)/10.0);
-      else
-        (value - 1)/10.0 => rev.mix;
-    }
-
-    //change delay
-    else if (previousMsg == "d")
-    {
-      if (loopToPlay >= 0)
-        loops[loopToPlay].setDelay((value - 1)/10.0);
-      else
-        (value - 1)/10.0 => delay.gain;
-    }
-
-    //up half step
-    else if (previousMsg == "=")
-    {
-      /*<<< "here1" >>>;*/
-      Std.mtof(c.fullScale[value-1] + startOctave*12 + 1) => frequency;
-    }
-
-    //down half step
-    else if (previousMsg == "_")
-    {
-      /*<<< "here2" >>>;*/
-      Std.mtof(c.fullScale[value-1] + startOctave*12 - 1) => frequency;
-    }
-
-    //change chorus
-    else if (previousMsg == "c")
-    {
-      (value - 1)/10.0 => chorus.mix;
-    }
-
-    //change scale
-    else if (previousMsg == "s")
-    {
-      c.setScale(c.getScale(value));
-      c.populateScale();  
-    }
-
-    //loop gain
-    else if(previousMsg == "g")
-    {
-      if (loopToPlay >= 0)
-      {
-        spork ~ setLoopGain();
-      }
-    }
-    //instr pan
-    else if(previousMsg == "p")
-    {
-      if (loopToPlay >= 0)
-        loops[loopToPlay].setPan((value - 5)*2/10.0);
-    }
-
-    //play sample if set to samples
-    else if (playSamples)
-    {
-      /*<<< "play sample #", value >>>;*/
-      samples.playSample(value - 1);
-    }
-
-    //if there were no previous messages, just play note
-    else
-    {
-      c.populateScale(); //if we don't mind setting it manually this can go away
-      Std.mtof(c.fullScale[value-1] + startOctave*12) => frequency;
-      if (isPolyphonic)
-      {
-        spork ~ playNote();  
-      }
-      else
-      {
-        instrGain => instr.noteOn;
-      }
-    }
-
-    " " => previousMsg; //clear out previous message
-
-  }
-
-  //backspace turns off note
-  else if(cmd == "bs")
-  {
-    if (isPolyphonic)
-    {
-      for(0 => int i; i < polyInst.cap(); i++)
-      {
-        instrGain => polyInst[i].noteOff;
-      }
-    }
-    else
-    {
-      instrGain => instr.noteOff;
-    }
-  }
-
-  //numpad numbers 1-9
-  else if(cmd == "f")
-  { 
-    /*<<< "num", value >>>;*/
-    //if switching song section
-    if (previousMsg == "-")
-    {
-      value => currentSection;
-      for(0 => int i; i < fileIds.cap(); i++)
-      {
-        spork ~ replaceFile(i+1, fileIds[i]);
-      }
-      " " => previousMsg;
-    }
-
-    //otherwise, just starting or stopping shred
-    else
-    {
-      //find current shred ID of file in quesiton.  if -1, create a new 
-      fileIds[value - 1] => int fileId;
-      /*<<< "fileId", fileId >>>;*/
-      if(fileId == -1)
-      {
-        spork ~ addNewFile(value);
-      }
-      else
-      {
-        spork ~ removeFile(value, fileId);
-      }
-    }
-  }
-
-  //start recording current loop position if right arrow pressed
-  else if(cmd == "ra")
-  {
-    spork ~ startLooper(loopToPlay);
-  }
-  //stop playing current loop if left arrow
-  else if(cmd == "la")
-  {
-    spork ~ stopLoop();
-  }
-
-  //toggle polyphony on/off
-  else if(cmd == "m")
-  {
-    toggle(isPolyphonic) => isPolyphonic;
-  }
-
-  //change octave
-  else if(cmd == "o")
-  {
-    startOctave + value => startOctave;
-  }
-
-  //toggle playing of samples
-  else if(cmd == "rc")
-  {
-    toggle(playSamples) => playSamples;
-    /*<<< "playSamples", playSamples >>>;*/
-  }
-
-
-
-  /*//instr pan*/
-  /*else if(cmd == "h")*/
-  /*{*/
-  /*value/100.0 => p.pan;*/
-  /*<<< "pan", p.pan() >>>;*/
-  /*}*/
-
-  //instr gain
-  else if(cmd == "v")
-  {
-    value/100.0 => instr.gain;
-  }
-
-  //vibrato - amount is percentage of original freq
-  else if(cmd == "s")
-  {
-    (0.0 + value)/10000*2 => percentage;
-    frequency*percentage => offset;
-    frequency+offset => frequency;
-  }
-
-  //play looper in separate shred so will still sound when restarting main
-  /*else if(cmd == "l")*/
-  /*{*/
-  /*<<< "looper ready" >>>;*/
-  /*waitTillNextMeasure();*/
-  /*Machine.add( "/docs/chuck/theremin/micLooper.ck:" + c.numBeats * value + ":" + c.tempo + ":" + lag + ":" + pan );*/
-  /*}*/
-
-
-
-
-  frequency => instr.freq;
-  " " => cmd;
-  1::samp => now;
-
-}
+// while (true)
+// {
+//   c.event => now;
+//   c.event.cmd => cmd;
+//   c.event.value => value;
+//
+//   //if starts distorting, cut back on reverb
+//   if(meter.max() > 0.9)
+//   {
+//     <<< "danger" >>>;
+//     rev.mix() - 0.2 => rev.mix;
+//     meter.resetMax();
+//   }
+//
+//   //for all keys that require a following action:
+//   if(cmd == "p" ||cmd == "g" || cmd == "s" ||cmd == "l" || cmd == "i" || cmd == "r" || cmd == "d" || cmd == "c" || cmd == "-" || cmd == "=" || cmd == "_" || cmd == "rs")
+//   {
+//     cmd => previousMsg;
+//   }
+//
+//   //top number keys and function keys
+//   if (cmd == "n")
+//   {
+//     //change preset
+//     if (previousMsg == "rs")
+//     {
+//       getPreset(value);
+//     }
+//
+//     //select a loop to control.  hit 0 to control main instrument
+//     else if (previousMsg == "l")
+//     {
+//       if (value == 10)
+//       {
+//         -1 => loopToPlay;
+//       }
+//       else
+//         value - 1 => loopToPlay;
+//
+//       <<< "loopToPlay", loopToPlay >>>;
+//     }
+//
+//     //change instrument
+//     else if (previousMsg == "i")
+//     {
+//       changeInstrument(value -1);
+//     }
+//
+//     //change reverb
+//     else if (previousMsg == "r")
+//     {
+//       if (loopToPlay >= 0)
+//         loops[loopToPlay].setReverb((value - 1)/10.0);
+//       else
+//         (value - 1)/10.0 => rev.mix;
+//     }
+//
+//     //change delay
+//     else if (previousMsg == "d")
+//     {
+//       if (loopToPlay >= 0)
+//         loops[loopToPlay].setDelay((value - 1)/10.0);
+//       else
+//         (value - 1)/10.0 => delay.gain;
+//     }
+//
+//     //up half step
+//     else if (previousMsg == "=")
+//     {
+//       /*<<< "here1" >>>;*/
+//       Std.mtof(c.fullScale[value-1] + startOctave*12 + 1) => frequency;
+//     }
+//
+//     //down half step
+//     else if (previousMsg == "_")
+//     {
+//       /*<<< "here2" >>>;*/
+//       Std.mtof(c.fullScale[value-1] + startOctave*12 - 1) => frequency;
+//     }
+//
+//     //change chorus
+//     else if (previousMsg == "c")
+//     {
+//       (value - 1)/10.0 => chorus.mix;
+//     }
+//
+//     //change scale
+//     else if (previousMsg == "s")
+//     {
+//       c.setScale(c.getScale(value));
+//       c.populateScale();
+//     }
+//
+//     //loop gain
+//     else if(previousMsg == "g")
+//     {
+//       if (loopToPlay >= 0)
+//       {
+//         spork ~ setLoopGain();
+//       }
+//     }
+//     //instr pan
+//     else if(previousMsg == "p")
+//     {
+//       if (loopToPlay >= 0)
+//         loops[loopToPlay].setPan((value - 5)*2/10.0);
+//     }
+//
+//     //play sample if set to samples
+//     else if (playSamples)
+//     {
+//       /*<<< "play sample #", value >>>;*/
+//       samples.playSample(value - 1);
+//     }
+//
+//     //if there were no previous messages, just play note
+//     else
+//     {
+//       c.populateScale(); //if we don't mind setting it manually this can go away
+//       Std.mtof(c.fullScale[value-1] + startOctave*12) => frequency;
+//       if (isPolyphonic)
+//       {
+//         spork ~ playNote();
+//       }
+//       else
+//       {
+//         instrGain => instr.noteOn;
+//       }
+//     }
+//
+//     " " => previousMsg; //clear out previous message
+//
+//   }
+//
+//   //backspace turns off note
+//   else if(cmd == "bs")
+//   {
+//     if (isPolyphonic)
+//     {
+//       for(0 => int i; i < polyInst.cap(); i++)
+//       {
+//         instrGain => polyInst[i].noteOff;
+//       }
+//     }
+//     else
+//     {
+//       instrGain => instr.noteOff;
+//     }
+//   }
+//
+//   //numpad numbers 1-9
+//   else if(cmd == "f")
+//   {
+//     /*<<< "num", value >>>;*/
+//     //if switching song section
+//     if (previousMsg == "-")
+//     {
+//       value => currentSection;
+//       for(0 => int i; i < fileIds.cap(); i++)
+//       {
+//         spork ~ replaceFile(i+1, fileIds[i]);
+//       }
+//       " " => previousMsg;
+//     }
+//
+//     //otherwise, just starting or stopping shred
+//     else
+//     {
+//       //find current shred ID of file in quesiton.  if -1, create a new
+//       fileIds[value - 1] => int fileId;
+//       /*<<< "fileId", fileId >>>;*/
+//       if(fileId == -1)
+//       {
+//         spork ~ addNewFile(value);
+//       }
+//       else
+//       {
+//         spork ~ removeFile(value, fileId);
+//       }
+//     }
+//   }
+//
+//   //start recording current loop position if right arrow pressed
+//   else if(cmd == "ra")
+//   {
+//     spork ~ startLooper(loopToPlay);
+//   }
+//   //stop playing current loop if left arrow
+//   else if(cmd == "la")
+//   {
+//     spork ~ stopLoop();
+//   }
+//
+//   //toggle polyphony on/off
+//   else if(cmd == "m")
+//   {
+//     toggle(isPolyphonic) => isPolyphonic;
+//   }
+//
+//   //change octave
+//   else if(cmd == "o")
+//   {
+//     startOctave + value => startOctave;
+//   }
+//
+//   //toggle playing of samples
+//   else if(cmd == "rc")
+//   {
+//     toggle(playSamples) => playSamples;
+//     /*<<< "playSamples", playSamples >>>;*/
+//   }
+//
+//
+//
+//   /*//instr pan*/
+//   /*else if(cmd == "h")*/
+//   /*{*/
+//   /*value/100.0 => p.pan;*/
+//   /*<<< "pan", p.pan() >>>;*/
+//   /*}*/
+//
+//   //instr gain
+//   else if(cmd == "v")
+//   {
+//     value/100.0 => instr.gain;
+//   }
+//
+//   //vibrato - amount is percentage of original freq
+//   else if(cmd == "s")
+//   {
+//     (0.0 + value)/10000*2 => percentage;
+//     frequency*percentage => offset;
+//     frequency+offset => frequency;
+//   }
+//
+//   //play looper in separate shred so will still sound when restarting main
+//   /*else if(cmd == "l")*/
+//   /*{*/
+//   /*<<< "looper ready" >>>;*/
+//   /*waitTillNextMeasure();*/
+//   /*Machine.add( "/docs/chuck/theremin/micLooper.ck:" + c.numBeats * value + ":" + c.tempo + ":" + lag + ":" + pan );*/
+//   /*}*/
+//
+//
+//
+//
+//   frequency => instr.freq;
+//   " " => cmd;
+//   1::samp => now;
+//
+// }
 
 fun void startLooper(int value)
 {
@@ -401,14 +461,14 @@ fun void addNewFile(int value)
 
 fun void replaceFile(int value, int fileId)
 {
-  waitTillNextMeasure();  
+  waitTillNextMeasure();
   Machine.replace(fileId, "file" + value + ".ck:" + currentSection);
 }
 
 fun void removeFile(int value, int fileId)
 {
   //this sometimes breaks things... don't know why
-  waitTillNextMeasure();  
+  waitTillNextMeasure();
   Machine.remove(fileId);
   -1 @=> fileIds[value - 1];
 }
@@ -452,7 +512,7 @@ fun void playNote()
   /*polyInst[0] @=> i;*/
   polyInst[spot] => rev;
   frequency => polyInst[spot].freq;
-  instrGain/2.5 => polyInst[spot].noteOn; 
+  instrGain/2.5 => polyInst[spot].noteOn;
   currentInstNum++;
   while(isPolyphonic)
   {
@@ -464,7 +524,7 @@ fun void changeInstrument(int num)
 {
   instrGain => instr.noteOff;
   instr =< rev;
-  inst[num] @=> instr;  
+  inst[num] @=> instr;
   instr =>  rev ;
   num => currentInst;
 }
